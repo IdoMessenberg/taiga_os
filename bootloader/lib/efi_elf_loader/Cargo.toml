@@ -1,0 +1,8 @@
+#*/-bootloader/lib/efi_elf_loader/cargo.toml
+[package]
+name = "efi_elf_loader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+uefi = {path="../uefi"}

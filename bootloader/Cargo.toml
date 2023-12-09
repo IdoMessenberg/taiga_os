@@ -1,0 +1,14 @@
+[package]
+name = "bootloader"
+version = "0.0.1"
+edition = "2021"
+
+[[bin]]
+path = "src/main.rs"
+name = "bootx64"
+test = false
+bench = false
+
+[dependencies]
+uefi = { path = "lib/uefi" }
+efi_elf_loader = { path = "lib/efi_elf_loader" }
