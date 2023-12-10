@@ -1,3 +1,4 @@
+#*/-bootloader/cargo.toml
 [package]
 name = "Taiga-Os-Bootloader"
 version = "0.0.1"

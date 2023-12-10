@@ -1,3 +1,4 @@
+#*/-bootloader/.cargo/config.toml
 [build]
 target = ["x86_64-unknown-uefi"]
 target-dir = "../target"

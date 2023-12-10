@@ -13,5 +13,6 @@ this is a simple operating system written completely in rust from scratch with n
 
 ## current progress
 
-![[resources/images/screenshots/3_loading_kernel.png]]
+<img src="/resources/images/screenshots/3_loading_kernel.png" alt="current_progerss" title="logo" align="center" height="200" />
+
 

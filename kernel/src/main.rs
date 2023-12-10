@@ -1,3 +1,4 @@
+//*/-kernel/src/main.rs
 #![no_std] #![no_main]
 
 #[export_name = "_start"]
