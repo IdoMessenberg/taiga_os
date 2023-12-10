@@ -1,6 +1,7 @@
 //*/-bootloader/lib/uefi/src/protocols/system.rs
 use crate::protocols::{console_support::simple_text_output, data_types::Guid, system_services::boot_time};
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=169
 #[repr(C)]
 pub struct Table {
     pub hdr:                 TableHeader,
@@ -16,6 +17,7 @@ pub struct Table {
     pub boot_time_services:  &'static boot_time::Services,
 }
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=167
 #[repr(C)]
 pub struct TableHeader {
     pub signature:   u64,
@@ -25,6 +27,7 @@ pub struct TableHeader {
     pub reserved:    u32,
 }
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=177
 #[repr(C)]
 pub struct ConfigurationTable {
     pub vendor_guid:  Guid,

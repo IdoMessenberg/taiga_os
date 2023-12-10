@@ -1,7 +1,13 @@
 //*/-bootloader/lib/uefi/src/protocols/data_types.rs
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=256
+///128-bit buffer containing a unique identifier value, unless otherwise specified, aligned on a 64-bit boundary
 #[repr(C)]
 pub struct Guid(pub u32, pub u16, pub u16, pub [u8; 8]);
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=2269
+///status code, type u32
+///todo: bug! - this needs to be a usize enum but it brakes the file protocol - reason unknown
 #[repr(u32)]
 #[derive(PartialEq, Clone, Copy)]
 pub enum Status {
@@ -52,6 +58,18 @@ impl Status {
     pub fn is_err(&self) -> bool { self != &Status::Success }
 }
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=241
+#[repr(C)]
+pub enum AllocateType {
+    AllocateAnyPages,
+    AllocateMaxAddress,
+    AllocateAddress,
+    MaxAllocateType,
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=242
+///and
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=239
 #[repr(C)]
 pub enum MemoryType {
     ReservedMemoryType,
@@ -73,14 +91,7 @@ pub enum MemoryType {
     MaxMemoryType,
 }
 
-#[repr(C)]
-pub enum AllocateType {
-    AllocateAnyPages,
-    AllocateMaxAddress,
-    AllocateAddress,
-    MaxAllocateType,
-}
-
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=245
 #[repr(C)]
 pub struct MemoryDescriptor {
     pub r#type:          u32,
@@ -88,19 +99,4 @@ pub struct MemoryDescriptor {
     pub virtual_start:   u64,
     pub number_of_pages: u64,
     pub attribute:       u64,
-}
-
-#[repr(C)]
-pub struct Time {
-    year:        u16,
-    month:       u8,
-    day:         u8,
-    hour:        u8,
-    minute:      u8,
-    second:      u8,
-    pad1:        u8,
-    nano_second: u32,
-    time_zone:   i16,
-    daylight:    u8,
-    pad2:        u8,
 }

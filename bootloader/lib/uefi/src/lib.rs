@@ -33,6 +33,10 @@ pub use protocols::system;
 pub use protocols::system_services::boot_time;
 
 pub fn init(system_table: &system::Table) {
-    console::init(system_table.con_out);
-    alloc::init(system_table);
+    if console::init(system_table.con_out).is_err()  {
+        return;
+    }
+    if alloc::init(system_table) .is_err() {
+        return;
+    }
 }

@@ -1,10 +1,14 @@
 # ![[resources/images/logos/logo_minimalist.png|35]] Taiga OS - a simple operating system
 
 
-![[logo_light.png|450]]
+![[resources/images/logos/logo_light.png#gh-dark-mode-only|450]]
+![[resources/images/logos/logo_dark.png#gh-light-mode-only|450]]
 this is a simple operating system written completely in rust from scratch with no external libraries 
 ## features 🐈
 * [ ] custom x86_64 UEFI bootloader
 * [ ] a simple shell
 
-## 
+## current progress
+
+![[resources/images/screenshots/3_loading_kernel.png]]
+

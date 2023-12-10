@@ -1,6 +1,7 @@
 //*/-bootloader/lib/uefi/src/protocols/console_support/simple_text_output.rs
 use crate::protocols::data_types::Status;
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=524
 #[repr(C)]
 pub struct Protocol {
     pub reset:               extern "efiapi" fn(&Self, verification: bool) -> Status,
@@ -15,6 +16,7 @@ pub struct Protocol {
     pub mode:                &'static Mode,
 }
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=525
 #[repr(C)]
 pub struct Mode {
     pub max_mode:       i32,

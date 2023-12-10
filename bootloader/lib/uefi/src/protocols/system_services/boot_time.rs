@@ -3,6 +3,7 @@ use crate::protocols::{
     data_types::{AllocateType, Guid, MemoryDescriptor, MemoryType, Status}, system
 };
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=171
 #[repr(C)]
 pub struct Services {
     pub hdr:                               system::TableHeader,

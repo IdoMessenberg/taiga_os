@@ -1,13 +1,15 @@
 [package]
-name = "bootloader"
+name = "Taiga-Os-Bootloader"
 version = "0.0.1"
 edition = "2021"
+authors = ["Ido Messenberg"]
 
 [[bin]]
 path = "src/main.rs"
 name = "bootx64"
 test = false
 bench = false
+
 
 [dependencies]
 uefi = { path = "lib/uefi" }

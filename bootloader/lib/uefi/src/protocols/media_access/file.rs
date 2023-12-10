@@ -1,6 +1,7 @@
 //*/-bootloader/lib/uefi/src/protocols/media_access/file.rs
-use crate::protocols::data_types::{Guid, Status, Time};
+use crate::protocols::data_types::{Guid, Status};
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=587
 #[repr(C)]
 pub struct Protocol {
     pub revision: u64,
@@ -20,23 +21,28 @@ pub struct Protocol {
     flush_ex:     extern "efiapi" fn() -> Status,
 }
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=605
+///the id of file info protocol
 pub const INFO_GUID: Guid = Guid(0x09576E92, 0x6D3F, 0x11D2, [0x8E, 0x39, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B]);
 
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf
+///
 #[repr(C)]
 pub struct Info {
-    pub size:              u64,
-    pub file_size:         u64,
-    pub physical_size:     u64,
-    pub create_time:       Time,
-    pub last_access_time:  Time,
-    pub modification_time: Time,
-    pub attribute:         u64,
-    pub file_name:         *const u16,
+    pub size:          u64,
+    pub file_size:     u64,
+    pub physical_size: u64,
+    create_time:       u16,
+    last_access_time:  u16,
+    modification_time: u16,
+    pub attribute:     u64,
+    pub file_name:     *const u16,
 }
 
+//https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=590
 //-Open file modes
 pub const READ_MODE: u64 = 0x0000000000000001;
-//-File attribtes
+//-Open file attribtes
 pub const READ_ONLY: u64 = 0x0000000000000001;
 pub const HIDDEN: u64 = 0x0000000000000002;
 pub const SYSTEM: u64 = 0x0000000000000004;
