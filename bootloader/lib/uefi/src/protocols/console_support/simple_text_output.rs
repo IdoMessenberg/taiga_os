@@ -3,7 +3,7 @@ use crate::protocols::data_types::Status;
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=524
 #[repr(C)]
-pub struct Protocol {
+pub struct Protocol<'a> {
     pub reset:               extern "efiapi" fn(&Self, verification: bool) -> Status,
     pub output_string:       extern "efiapi" fn(&Self, string: *const u16) -> Status,
     pub test_string:         extern "efiapi" fn(&Self, string: *const u16) -> Status,
@@ -13,7 +13,7 @@ pub struct Protocol {
     pub clear_screen:        extern "efiapi" fn(&Self) -> Status,
     pub set_cursor_position: extern "efiapi" fn(&Self, column: usize, row: usize) -> Status,
     pub enable_cursor:       extern "efiapi" fn(&Self, enable: bool) -> Status,
-    pub mode:                &'static Mode,
+    pub mode:                &'a Mode,
 }
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=525

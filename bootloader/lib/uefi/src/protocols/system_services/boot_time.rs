@@ -44,7 +44,7 @@ pub struct Services {
     open_protocol_information:             extern "efiapi" fn() -> Status,
     protocols_per_handle:                  extern "efiapi" fn() -> Status,
     locate_handle_buffer:                  extern "efiapi" fn() -> Status,
-    pub locate_protocol:                   extern "efiapi" fn(protocol: *const Guid, registration: *const core::ffi::c_void, interface: *mut *const core::ffi::c_void) -> Status,
+    pub locate_protocol:                   extern "efiapi" fn(protocol: *const Guid, registration: *const core::ffi::c_void, interface: *const *const core::ffi::c_void) -> Status,
     install_multiple_protocol_interafes:   extern "efiapi" fn() -> Status,
     uninstall_multiple_protocol_interface: extern "efiapi" fn() -> Status,
     calculate_crc_32:                      extern "efiapi" fn() -> Status,

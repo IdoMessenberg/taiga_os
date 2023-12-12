@@ -11,7 +11,7 @@ pub struct Protocol {
     pub read:     extern "efiapi" fn(*const Self, buffer_size: *const usize, buffer: *const core::ffi::c_void) -> Status,
     write:        extern "efiapi" fn() -> Status,
     get_position: extern "efiapi" fn() -> Status,
-    set_position: extern "efiapi" fn() -> Status,
+    pub set_position: extern "efiapi" fn(*const Self, position: u64) -> Status,
     pub get_info: extern "efiapi" fn(*const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *const core::ffi::c_void) -> Status,
     set_info:     extern "efiapi" fn() -> Status,
     flush:        extern "efiapi" fn() -> Status,

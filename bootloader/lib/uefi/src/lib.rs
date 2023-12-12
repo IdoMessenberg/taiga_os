@@ -10,6 +10,7 @@ pub mod protocols {
     pub mod system;
 
     pub mod console_support {
+        pub mod graphics_output;
         pub mod simple_text_output;
     }
 
@@ -22,10 +23,10 @@ pub mod protocols {
     }
 }
 
-mod alloc;
+pub mod alloc;
 mod console;
 pub mod file;
-mod graphics;
+pub mod graphics;
 
 pub use console::Colour;
 pub use protocols::data_types::{Guid, Status};
@@ -33,10 +34,13 @@ pub use protocols::system;
 pub use protocols::system_services::boot_time;
 
 pub fn init(system_table: &system::Table) {
-    if console::init(system_table.con_out).is_err()  {
+    if graphics::init(system_table).is_err() {
         return;
     }
-    if alloc::init(system_table) .is_err() {
+    if console::init(system_table).is_err() {
+        return;
+    }
+    if alloc::init(system_table).is_err() {
         return;
     }
 }

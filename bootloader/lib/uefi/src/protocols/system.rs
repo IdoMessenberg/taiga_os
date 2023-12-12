@@ -3,18 +3,18 @@ use crate::protocols::{console_support::simple_text_output, data_types::Guid, sy
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=169
 #[repr(C)]
-pub struct Table {
+pub struct Table<'a> {
     pub hdr:                 TableHeader,
     pub firmware_vendor:     *const u16,
     pub firmware_revision:   u32,
     pub console_in_handle:   *const core::ffi::c_void,
     con_in:                  *const core::ffi::c_void,
     pub console_out_handle:  *const core::ffi::c_void,
-    pub con_out:             &'static simple_text_output::Protocol,
+    pub con_out:             &'a simple_text_output::Protocol<'a>,
     pub console_eror_handle: *const core::ffi::c_void,
-    pub std_err:             &'static simple_text_output::Protocol,
+    pub std_err:             &'a simple_text_output::Protocol<'a>,
     run_time_services:       *const core::ffi::c_void,
-    pub boot_time_services:  &'static boot_time::Services,
+    pub boot_time_services:  &'a boot_time::Services,
 }
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=167

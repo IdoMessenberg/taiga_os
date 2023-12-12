@@ -10,9 +10,20 @@ this is a simple operating system written completely in rust from scratch with n
 ## features 🐈
 * [ ] custom x86_64 UEFI bootloader
 * [ ] a simple shell
+## how to build
+* rust compiler
+* qemu
+
+1. install rust targets   `rustup target add x86_64-unknown-uefi` and
+    `rustup target add x86_64-unknown-none`
+2. build the the operating system `./batch/build` and `d`
+3. run `./batch/run`
 
 ## current progress
 
-<img src="/resources/images/screenshots/3_loading_kernel.png" alt="current_progerss" title="logo" align="center" height="200" />
+![](resources/images/screenshots/3_loading_kernel.png)
 
 
+## bugs
+* efi status is u32  and not usize even though it needs to be usize because it brakes the load file function and it won't work
+* can not load psf font and display characters 

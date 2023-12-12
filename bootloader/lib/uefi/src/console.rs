@@ -1,11 +1,11 @@
 //*/-bootloader/lib/uefi/src/console.rs
-use crate::protocols::{console_support::simple_text_output, data_types::Status};
+use crate::protocols::{console_support::simple_text_output, data_types::Status, system};
 
-pub fn init(con_out: &simple_text_output::Protocol) -> Status {
-    if (con_out.reset)(con_out, true).is_err() || con_out.clear_screen().is_err() {
-        return con_out.println_status("Console - Boot Time Console Is Not Initialised!", Status::Aborted);
+pub fn init(system_table: &system::Table) -> Status {
+    if system_table.con_out.clear_screen().is_err() {
+        return system_table.con_out.println_status("Console - Boot Time Console Is Not Initialised!", Status::Aborted);
     }
-    con_out.println_status("Console - Boot Time Console Is Initialised!", Status::Success)
+    system_table.con_out.println_status("Console - Boot Time Console Is Initialised!", Status::Success)
 }
 
 fn put_char(con_out: &simple_text_output::Protocol, char: char) -> Status {
@@ -24,19 +24,21 @@ fn put_char(con_out: &simple_text_output::Protocol, char: char) -> Status {
     Status::Aborted
 }
 
-fn put_usize(con_out: &simple_text_output::Protocol, num: usize) -> Status {
+fn put_usize(con_out: &simple_text_output::Protocol, num: &usize) -> Status {
     //-geting the numer of digits in the number
     let mut i: usize = 1;
     //-this is a for loop and not a while to prevent an infinate loop and is set to 17
     // as it is the max number fo digits in a usize
-    for _ in 0..17 {
-        i *= 10;
-        if i >= num / 10 {
-            break;
+    if i <= num / 10 {
+        for _ in 0..17 {
+            i *= 10;
+            if i >= num / 10 {
+                break;
+            }
         }
     }
     //-outputing the number to screen
-    let mut temp: usize = num;
+    let mut temp: usize = num.clone();
     //-iterating over the number for it's length an outputing the digits one by one
     // by deviding the temporary number by i which is
     for _ in 0..17 {
@@ -56,7 +58,7 @@ fn put_usize(con_out: &simple_text_output::Protocol, num: usize) -> Status {
     Status::Success
 }
 
-impl simple_text_output::Protocol {
+impl simple_text_output::Protocol<'_> {
     pub fn clear_screen(&self) -> Status { (self.clear_screen)(self) }
 
     pub fn set_forground_colour(&self, colour: Colour) -> Status { (self.set_attribute)(self, colour as usize) }
@@ -84,7 +86,7 @@ impl simple_text_output::Protocol {
         }
     }
 
-    pub fn print_usize(&self, string: &str, num: usize) -> Status {
+    pub fn print_usize(&self, string: &str, num: &usize) -> Status {
         let mut last_char: char = '\0';
         for (_, char) in string.chars().enumerate() {
             //-printing the number if both chars are "{}" which is like the standard rust formating
@@ -113,7 +115,7 @@ impl simple_text_output::Protocol {
         Status::Success
     }
 
-    pub fn println_usize(&self, string: &str, num: usize) -> Status {
+    pub fn println_usize(&self, string: &str, num: &usize) -> Status {
         //-printing both the string and "\r\n" -> \r which returns to the begining of the line and \n which makes a new line
         if self.print_usize(string, num).is_err() || self.print("\r\n").is_err() {
             Status::Aborted
@@ -150,6 +152,23 @@ impl simple_text_output::Protocol {
             }
         }
         status
+    }
+
+    pub fn print_env_info(&self, package_name: &str, package_authors: &str, package_version: &str) -> Status {
+        if self.set_forground_colour(Colour::Green).is_err()
+            || self.print("[INFO]").is_err()
+            || self.set_forground_colour(Colour::LightGray).is_err()
+            || self.print(" - ").is_err()
+            || self.print(package_name).is_err()
+            || self.print(" by: ").is_err()
+            || self.println(package_authors).is_err()
+        {
+            return Status::Aborted;
+        }
+        if self.set_forground_colour(Colour::Green).is_err() || self.print("[VERS]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - bootloader version: ").is_err() || self.println(package_version).is_err() {
+            return Status::Aborted;
+        }
+        Status::Success
     }
 }
 

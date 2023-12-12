@@ -100,3 +100,41 @@ pub struct MemoryDescriptor {
     pub number_of_pages: u64,
     pub attribute:       u64,
 }
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=560
+#[repr(C)]
+pub struct PixelBitmask {
+    red_mask:      u32,
+    green_mask:    u32,
+    blue_mask:     u32,
+    reserved_mask: u32,
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=561
+#[repr(C)]
+pub enum PixelFormat {
+    PixelRedGreenBlueReserved8BitPerColor,
+    PixelBlueGreenRedReserved8BitPerColor,
+    PixelBitMask,
+    PixelBltOnly,
+    PixelFormatMax,
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=566
+#[repr(C)]
+pub struct BltPixel {
+    blue:     u8,
+    green:    u8,
+    red:      u8,
+    reserved: u8,
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=566
+#[repr(C)]
+pub enum BltOperation {
+    VideoFill,
+    VideoToBltBuffer,
+    BufferToVideo,
+    VideoToVideo,
+    Max,
+}

@@ -1,12 +1,12 @@
 //*/-bootloader/lib/uefi/src/file.rs
 use crate::protocols::{
-    data_types::Status, loaded_image, media_access::{file, simple_file_system}, system
+    data_types::Status, loaded_image, media_access::{file, simple_file_system}, system_services::boot_time
 };
 
-pub fn get_root(handle: *const core::ffi::c_void, system_table: &system::Table) -> Result<&file::Protocol, Status> {
+pub fn get_root(handle: *const core::ffi::c_void, boot_time_services: &boot_time::Services) -> Result<&file::Protocol, Status> {
     //-getting the loaded image protocol to get the device handle
     let loaded_image: *const loaded_image::Protocol = core::ptr::null();
-    if (system_table.boot_time_services.handle_protocol)(handle, &loaded_image::GUID, core::ptr::addr_of!(loaded_image) as *const *const core::ffi::c_void).is_err() {
+    if (boot_time_services.handle_protocol)(handle, &loaded_image::GUID, core::ptr::addr_of!(loaded_image) as *const *const core::ffi::c_void).is_err() {
         return Err(Status::Aborted);
     }
     //making sure that the loaded image is not null to make sure the next part is safe and not accessing a null pointer
@@ -17,7 +17,7 @@ pub fn get_root(handle: *const core::ffi::c_void, system_table: &system::Table) 
     let file_system: *const simple_file_system::Protocol = core::ptr::null();
     //-safety: this is getting the file system and should be safe as i checked that the loaded image is not null before
     // and the unsafe is needed to derefrance the loaded image to access the device handle
-    if (system_table.boot_time_services.handle_protocol)(unsafe { (*loaded_image).device_handle }, &simple_file_system::GUID, core::ptr::addr_of!(file_system) as *const *const core::ffi::c_void).is_err() {
+    if (boot_time_services.handle_protocol)(unsafe { (*loaded_image).device_handle }, &simple_file_system::GUID, core::ptr::addr_of!(file_system) as *const *const core::ffi::c_void).is_err() {
         return Err(Status::Aborted);
     }
     //making sure that the file system is not null to make sure the next part is safe and not accessing a null pointer
@@ -47,7 +47,7 @@ impl file::Protocol {
         self.close_file(file_handle);
         Ok(data)
     }
-    fn open_file(&self, file_name: *const u16) -> Result<&file::Protocol, Status> {
+    pub fn open_file(&self, file_name: *const u16) -> Result<&file::Protocol, Status> {
         let file_handle: *const file::Protocol = core::ptr::null();
         if (self.open)(self, core::ptr::addr_of!(file_handle), file_name, file::READ_MODE, file::READ_ONLY | file::HIDDEN | file::SYSTEM).is_err() {
             return Err(Status::Aborted);
@@ -79,5 +79,6 @@ impl file::Protocol {
         }
         Ok(data)
     }
+    
     fn close_file(&self, file_handle: *const file::Protocol) -> Status { (self.close)(file_handle) }
 }

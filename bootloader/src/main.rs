@@ -3,65 +3,55 @@
 #![no_std]
 #![no_main]
 
-extern crate efi_elf_loader as elf;
+extern crate alloc as std_alloc;
 extern crate uefi as efi;
+mod elf;
+mod psf;
 
 const KERNEL_FILE_NAME: *const u16 = [b'k' as u16, b'e' as u16, b'r' as u16, b'n' as u16, b'e' as u16, b'l' as u16, 0].as_ptr();
-type KernelEntry = fn() -> usize;
+const KERNEL_FONT_FILE_NAME: *const u16 = [b'f' as u16, b'o' as u16, b'n' as u16, b't' as u16, b'.' as u16, b'p' as u16, b's' as u16, b'f' as u16, 0].as_ptr();
+
+type KernelEntry = extern "efiapi" fn(BootInfo);
+
+#[repr(C)]
+struct BootInfo {
+    graphics: efi::graphics::Info,
+    font:     psf::FontInfo,
+}
 
 #[export_name = "efi_main"]
-extern "C" fn main(handle: *const core::ffi::c_void, system_table: efi::system::Table) -> efi::Status {
+extern "efiapi" fn main(handle: *const core::ffi::c_void, system_table: efi::system::Table) -> efi::Status {
     efi::init(&system_table);
-    print_env_var(&system_table);
-    let system_root = if let Ok(root) = efi::file::get_root(handle, &system_table) {
-        root
-    } else {
-        return efi::Status::Aborted;
-    };
+    system_table.con_out.print_env_info(core::env!("CARGO_PKG_NAME"), core::env!("CARGO_PKG_AUTHORS"), core::env!("CARGO_PKG_VERSION"));
+
+    let system_root: &efi::protocols::media_access::file::Protocol = if let Ok(root) = efi::file::get_root(handle, system_table.boot_time_services) { root } else { return efi::Status::Aborted };
+
     let kernel_entry_addr = {
-        let kernel_file = if let Ok(kernel_file_handle) = system_root.load_file(KERNEL_FILE_NAME) {
-            kernel_file_handle
-        } else {
-            return efi::Status::Aborted;
-        };
-        system_table.con_out.println_usize("kernel file size: {} bytes", kernel_file.len());
+        let kernel_file: std_alloc::vec::Vec<u8> = if let Ok(kernel_file_vec) = system_root.load_file(KERNEL_FILE_NAME) { kernel_file_vec } else { return efi::Status::Aborted };
+        system_table.con_out.println_usize("[KERNEL] - File Size - {}kb", &(kernel_file.len() / 1024));
+
         if let Ok(entry) = elf::load_executable(&system_table, &kernel_file) {
             entry
         } else {
             return efi::Status::Aborted;
         }
     };
+
+    let font = {
+        let font_file_handle = if let Ok(font_file_handle) = system_root.open_file(KERNEL_FONT_FILE_NAME) { font_file_handle } else { return efi::Status::Aborted };
+        if let Ok(font) = psf::load_font(&system_table, font_file_handle) {
+            font
+        } else {
+            return efi::Status::Aborted;
+        }
+    };
+
+    let graphics_info: efi::graphics::Info = if let Ok(info) = system_table.boot_time_services.get_graphics_info() { info } else { return system_table.con_out.println_status("Graphics - Could Not Get Graphics Info!", efi::Status::Aborted) };
+
     //safety: yeah this shit is unsafe as fuck
-    let kernel_entry_point = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
-    system_table.con_out.println_usize("entry: {}", kernel_entry_point());
-    system_table.con_out.println("hello!");
-
-    loop {}
-    efi::Status::Success
-}
-
-fn print_env_var(system_table: &efi::system::Table) -> efi::Status {
-    if system_table.con_out.set_forground_colour(efi::Colour::Green).is_err()
-        || system_table.con_out.print("[INFO]").is_err()
-        || system_table.con_out.set_forground_colour(efi::Colour::LightGray).is_err()
-        || system_table.con_out.print(" - ").is_err()
-        || system_table.con_out.print(core::env!("CARGO_PKG_NAME")).is_err()
-        || system_table.con_out.print(" by: ").is_err()
-        || system_table.con_out.println(core::env!("CARGO_PKG_AUTHORS")).is_err()
-    {
-        return efi::Status::Aborted;
-    }
-
-    if system_table.con_out.set_forground_colour(efi::Colour::Green).is_err()
-        || system_table.con_out.print("[VERS]").is_err()
-        || system_table.con_out.set_forground_colour(efi::Colour::LightGray).is_err()
-        || system_table.con_out.print(" - bootloader version: ").is_err()
-        || system_table.con_out.println(core::env!("CARGO_PKG_VERSION")).is_err()
-    {
-        return efi::Status::Aborted;
-    }
-
-    efi::Status::Success
+    let kernel_entry_point: extern "efiapi" fn(BootInfo) = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
+    kernel_entry_point(BootInfo { graphics: graphics_info, font });
+    panic!()
 }
 
 #[panic_handler]

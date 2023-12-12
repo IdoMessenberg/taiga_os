@@ -49,6 +49,8 @@ unsafe impl core::alloc::GlobalAlloc for BootTimeAllocator {
 
 impl boot_time::Services {
     pub fn allocate_pages(&self, size: usize, memory_address: *const u64) -> Status { (self.allocate_pages)(AllocateType::AllocateAddress, MemoryType::LoaderData, size, memory_address) }
+    pub fn allocate_pool(&self, size: usize, memory_address: *const *const core::ffi::c_void) -> Status { (self.allocate_pool)(MemoryType::LoaderData, size, memory_address) }
+
     pub fn copy_mem(&self, destination: *const core::ffi::c_void, source: *const core::ffi::c_void, length: usize) { (self.copy_mem)(destination, source, length); }
 
     pub fn get_memory_map(&self) -> Result<MemoryMapInfo, Status> {

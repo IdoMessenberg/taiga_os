@@ -19,5 +19,5 @@ pub struct Protocol {
     image_size:        u64,
     image_code_type:   MemoryType,
     image_data_type:   MemoryType,
-    unload:      extern "efiapi" fn() -> Status,
+    unload:            extern "efiapi" fn() -> Status,
 }
