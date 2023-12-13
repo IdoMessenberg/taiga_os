@@ -79,6 +79,6 @@ impl file::Protocol {
         }
         Ok(data)
     }
-    
+
     fn close_file(&self, file_handle: *const file::Protocol) -> Status { (self.close)(file_handle) }
 }

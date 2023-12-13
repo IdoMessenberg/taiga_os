@@ -41,6 +41,5 @@ pub fn init(system_table: &system::Table) {
         return;
     }
     if alloc::init(system_table).is_err() {
-        return;
     }
 }

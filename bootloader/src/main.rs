@@ -38,16 +38,19 @@ extern "efiapi" fn main(handle: *const core::ffi::c_void, system_table: efi::sys
     };
 
     let font = {
-        let font_file_handle = if let Ok(font_file_handle) = system_root.open_file(KERNEL_FONT_FILE_NAME) { font_file_handle } else { return efi::Status::Aborted };
-        if let Ok(font) = psf::load_font(&system_table, font_file_handle) {
-            font
+        let font_file: std_alloc::vec::Vec<u8> = if let Ok(font_file_vec) = system_root.load_file(KERNEL_FONT_FILE_NAME) {
+            font_file_vec
+        } else {
+            return efi::Status::Aborted;
+        };
+        if let Ok(font_info) = psf::load_font(&system_table, &font_file) {
+            font_info
         } else {
             return efi::Status::Aborted;
         }
     };
-
     let graphics_info: efi::graphics::Info = if let Ok(info) = system_table.boot_time_services.get_graphics_info() { info } else { return system_table.con_out.println_status("Graphics - Could Not Get Graphics Info!", efi::Status::Aborted) };
-
+    
     //safety: yeah this shit is unsafe as fuck
     let kernel_entry_point: extern "efiapi" fn(BootInfo) = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
     kernel_entry_point(BootInfo { graphics: graphics_info, font });

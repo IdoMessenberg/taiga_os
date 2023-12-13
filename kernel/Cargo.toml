@@ -1,6 +1,6 @@
 #*/-kernel/cargo.toml
 [package]
-name = "kernel"
+name = "taiga-os-kernel"
 version = "0.1.0"
 edition = "2021"
 

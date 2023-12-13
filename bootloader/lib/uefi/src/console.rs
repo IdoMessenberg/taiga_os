@@ -8,57 +8,58 @@ pub fn init(system_table: &system::Table) -> Status {
     system_table.con_out.println_status("Console - Boot Time Console Is Initialised!", Status::Success)
 }
 
-fn put_char(con_out: &simple_text_output::Protocol, char: char) -> Status {
-    //-testing if simple text output protocl support that char
-    // only if it supports it then will this function output it
-    // for example uefi simple text output protocol supports this char - 'A' but not '🌲'
-    // so this function will only attempt to output the 'A' char
-
-    //-simple text output protocol work with the UCS-2 text format while Rust strings and chars are UTF-8
-    // this is why the char is converted to u16 as UCS-2 is a 16-bit format while UTF-8 is an 8-bit format
-    // the 0u16 is added to the array as it is a null terminating end point to make sure only the char will be outputed
-    if (con_out.test_string)(con_out, [char as u16, 0u16].as_ptr()).is_ok() {
-        // returning the status of output string so the function could make sure this function work correctly
-        return (con_out.output_string)(con_out, [char as u16, 0u16].as_ptr());
+impl simple_text_output::Protocol<'_> {
+    fn put_char(&self, char: char) -> Status {
+        //-testing if simple text output protocl support that char
+        // only if it supports it then will this function output it
+        // for example uefi simple text output protocol supports this char - 'A' but not '🌲'
+        // so this function will only attempt to output the 'A' char
+    
+        //-simple text output protocol work with the UCS-2 text format while Rust strings and chars are UTF-8
+        // this is why the char is converted to u16 as UCS-2 is a 16-bit format while UTF-8 is an 8-bit format
+        // the 0u16 is added to the array as it is a null terminating end point to make sure only the char will be outputed
+        if (self.test_string)(self, [char as u16, 0u16].as_ptr()).is_ok() {
+            // returning the status of output string so the function could make sure this function work correctly
+            return (self.output_string)(self, [char as u16, 0u16].as_ptr());
+        }
+        Status::Aborted
     }
-    Status::Aborted
-}
-
-fn put_usize(con_out: &simple_text_output::Protocol, num: &usize) -> Status {
-    //-geting the numer of digits in the number
-    let mut i: usize = 1;
-    //-this is a for loop and not a while to prevent an infinate loop and is set to 17
-    // as it is the max number fo digits in a usize
-    if i <= num / 10 {
+    
+    fn put_usize(&self, num: &usize) -> Status {
+        //-geting the numer of digits in the number
+        let mut i: usize = 1;
+        //-this is a for loop and not a while to prevent an infinate loop and is set to 17
+        // as it is the max number fo digits in a usize
+        if i <= num / 10 {
+            for _ in 0..17 {
+                i *= 10;
+                if i >= num / 10 {
+                    break;
+                }
+            }
+        }
+        //-outputing the number to screen
+        let mut temp: usize = *num;
+        //-iterating over the number for it's length an outputing the digits one by one
+        // by deviding the temporary number by i which is
         for _ in 0..17 {
-            i *= 10;
-            if i >= num / 10 {
+            if self.put_char((b'0' + (temp / i) as u8) as char).is_err() {
+                return Status::Aborted;
+            }
+            //-removing the first digit of the number
+            // temp = 1234  -> 234
+            // i    = 1000
+            temp %= i;
+    
+            i /= 10;
+            if i == 0 {
                 break;
             }
         }
+        Status::Success
     }
-    //-outputing the number to screen
-    let mut temp: usize = num.clone();
-    //-iterating over the number for it's length an outputing the digits one by one
-    // by deviding the temporary number by i which is
-    for _ in 0..17 {
-        if put_char(con_out, (b'0' + (temp / i) as u8) as char).is_err() {
-            return Status::Aborted;
-        }
-        //-removing the first digit of the number
-        // temp = 1234  -> 234
-        // i    = 1000
-        temp %= i;
 
-        i /= 10;
-        if i == 0 {
-            break;
-        }
-    }
-    Status::Success
-}
 
-impl simple_text_output::Protocol<'_> {
     pub fn clear_screen(&self) -> Status { (self.clear_screen)(self) }
 
     pub fn set_forground_colour(&self, colour: Colour) -> Status { (self.set_attribute)(self, colour as usize) }
@@ -69,7 +70,7 @@ impl simple_text_output::Protocol<'_> {
         for char in string.chars() {
             //-if the char couldn't be outputed either because it's not aviable to output or a diffrent output problem
             // the function will stop and will not continue to output the chars of the string
-            if put_char(self, char).is_err() {
+            if self.put_char(char).is_err() {
                 return Status::Aborted;
             }
         }
@@ -91,22 +92,22 @@ impl simple_text_output::Protocol<'_> {
         for (_, char) in string.chars().enumerate() {
             //-printing the number if both chars are "{}" which is like the standard rust formating
             if last_char == '{' && char == '}' {
-                if put_usize(self, num).is_err() {
+                if self.put_usize(num).is_err() {
                     return Status::Aborted;
                 }
             }
             //-printing to screen the char if it's not '{' which could be where the number should be placed
             else if char != '{' {
-                if put_char(self, char).is_err() {
+                if self.put_char(char).is_err() {
                     return Status::Aborted;
                 }
             }
             //-printing to screen the last char if it was '{' which is skiped and printing the current char
             else if last_char == '{' && char != '}' {
-                if put_char(self, last_char).is_err() {
+                if self.put_char(last_char).is_err() {
                     return Status::Aborted;
                 }
-                if put_char(self, char).is_err() {
+                if self.put_char(char).is_err() {
                     return Status::Aborted;
                 }
             }
