@@ -7,13 +7,18 @@
 </p>
 
 ```
-  /\    Taiga os
-  /\    description: this is a simple operating system writen completely in rust  
- /__\   from scratch with no external libraries
- /  \   writen by: Ido Messenberg
-/____\  
-  ||
+    /\    Taiga os
+    /\    description: this is a simple operating system writen completely 
+   /__\   in rust from scratch with no external libraries
+   / .\   target: x86_64
+  /____\  uefi boot: true
+  /  . \       _
+ /  .   \   |\'/-..--.
+/________\ / _ _   ,  ;
+   |  |   `~=`Y'~_<._./
+   |  |	  <`-....__.'
 ```
+
 ## features 🐈
 * [x] custom x86_64 UEFI bootloader
 * [ ] a simple shell
