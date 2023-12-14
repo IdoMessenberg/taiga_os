@@ -33,13 +33,9 @@ pub use protocols::data_types::{Guid, Status};
 pub use protocols::system;
 pub use protocols::system_services::boot_time;
 
-pub fn init(system_table: &system::Table) {
-    if graphics::init(system_table).is_err() {
+pub fn init(system_table: &system::Table, package_name: &str, package_authors: &str, package_version: &str) {
+    if graphics::init(system_table, package_name, package_authors, package_version).is_err() {
         return;
     }
-    if console::init(system_table).is_err() {
-        return;
-    }
-    if alloc::init(system_table).is_err() {
-    }
+    if alloc::init(system_table).is_err() {}
 }

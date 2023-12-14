@@ -6,9 +6,16 @@
 <img src="/resources/images/logos/logo_dark.png#gh-light-mode-only" alt="Taiga OS logo" title="logo" align="center" height="200" />
 </p>
 
-this is a simple operating system written completely in rust from scratch with no external libraries 
+```
+  /\    Taiga os
+  /\    description: this is a simple operating system writen completely in rust  
+ /__\   from scratch with no external libraries
+ /  \   writen by: Ido Messenberg
+/____\  
+  ||
+```
 ## features 🐈
-* [ ] custom x86_64 UEFI bootloader
+* [x] custom x86_64 UEFI bootloader
 * [ ] a simple shell
 ## how to build
 * rust compiler
@@ -21,9 +28,7 @@ this is a simple operating system written completely in rust from scratch with n
 
 ## current progress
 
-![](resources/images/screenshots/3_loading_kernel.png)
-
-
+![](resources/images/screenshots/5_loaded_font_to_kernel.png)
 ## bugs
 * efi status is u32  and not usize even though it needs to be usize because it brakes the load file function and it won't work
-* can not load psf font and display characters 
+* can not get a correct memory map 

@@ -1,12 +1,5 @@
 //*/-bootloader/lib/uefi/src/console.rs
-use crate::protocols::{console_support::simple_text_output, data_types::Status, system};
-
-pub fn init(system_table: &system::Table) -> Status {
-    if system_table.con_out.clear_screen().is_err() {
-        return system_table.con_out.println_status("Console - Boot Time Console Is Not Initialised!", Status::Aborted);
-    }
-    system_table.con_out.println_status("Console - Boot Time Console Is Initialised!", Status::Success)
-}
+use crate::protocols::{console_support::simple_text_output, data_types::Status};
 
 impl simple_text_output::Protocol<'_> {
     fn put_char(&self, char: char) -> Status {
@@ -14,7 +7,7 @@ impl simple_text_output::Protocol<'_> {
         // only if it supports it then will this function output it
         // for example uefi simple text output protocol supports this char - 'A' but not '🌲'
         // so this function will only attempt to output the 'A' char
-    
+
         //-simple text output protocol work with the UCS-2 text format while Rust strings and chars are UTF-8
         // this is why the char is converted to u16 as UCS-2 is a 16-bit format while UTF-8 is an 8-bit format
         // the 0u16 is added to the array as it is a null terminating end point to make sure only the char will be outputed
@@ -24,7 +17,7 @@ impl simple_text_output::Protocol<'_> {
         }
         Status::Aborted
     }
-    
+
     fn put_usize(&self, num: &usize) -> Status {
         //-geting the numer of digits in the number
         let mut i: usize = 1;
@@ -50,7 +43,7 @@ impl simple_text_output::Protocol<'_> {
             // temp = 1234  -> 234
             // i    = 1000
             temp %= i;
-    
+
             i /= 10;
             if i == 0 {
                 break;
@@ -58,7 +51,6 @@ impl simple_text_output::Protocol<'_> {
         }
         Status::Success
     }
-
 
     pub fn clear_screen(&self) -> Status { (self.clear_screen)(self) }
 
@@ -128,26 +120,32 @@ impl simple_text_output::Protocol<'_> {
     pub fn println_status(&self, string: &str, status: Status) -> Status {
         match status as usize {
             0 => {
-                //-∇-setting the colour to green                        ∇-printing out ok                       ∇-setting the colour to light gray the default colour   ∇-printing the spacer                 ∇-printing the string
-                if self.set_forground_colour(Colour::Green).is_err() || self.print("[OK!]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - ").is_err() || self.println(string).is_err() {
+                //-                                    ∇-setting the colour to green                        ∇-printing out ok                     ∇-setting the colour to light gray the default colour   ∇-printing the spacer                 ∇-printing the string
+                if self.print("[ ").is_err() || self.set_forground_colour(Colour::Green).is_err() || self.print("OK!").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" ] - ").is_err() || self.println(string).is_err() {
                     return Status::Aborted;
                 }
             }
             x if x > 0 && x < i32::MAX as usize + 2 => {
-                //-∇-setting the colour to red                             ∇-printing out err                      ∇-setting the colour to light gray the default colour     ∇-printing the spacer                ∇-printing the string
-                if self.set_forground_colour(Colour::LightRed).is_err() || self.print("[ERR!]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - ").is_err() || self.println(string).is_err() {
+                //-                                    ∇-setting the colour to red                             ∇-printing out err                     ∇-setting the colour to light gray the default colour     ∇-printing the spacer                ∇-printing the string
+                if self.print("[ ").is_err() || self.set_forground_colour(Colour::LightRed).is_err() || self.print("ERR!").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" ] - ").is_err() || self.println(string).is_err() {
                     return Status::Aborted;
                 }
             }
             x if x >= i32::MAX as usize + 2 => {
-                //-∇-setting the colour to brown (which is more yellow) ∇-printing out warn                      ∇-setting the colour to light gray the default colour     ∇-printing the spacer                ∇-printing the string
-                if self.set_forground_colour(Colour::Brown).is_err() || self.print("[WARN!]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - ").is_err() || self.println(string).is_err() {
+                //-                                    ∇-setting the colour to brown (which is more yellow) ∇-printing out warn                     ∇-setting the colour to light gray the default colour    ∇-printing the spacer                ∇-printing the string
+                if self.print("[ ").is_err() || self.set_forground_colour(Colour::Brown).is_err() || self.print("WARN!").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" ] - ").is_err() || self.println(string).is_err() {
                     return Status::Aborted;
                 }
             }
             _ => {
-                //-∇-setting the colour to dark gray                        ∇-printing out unknown status                     ∇-setting the colour to light gray the default colour    ∇-printing the spacer                 ∇-printing the string
-                if self.set_forground_colour(Colour::DarkGray).is_err() || self.print("[UNKNOWN STATUS]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - ").is_err() || self.println(string).is_err() {
+                //-                                    ∇-setting the colour to dark gray                        ∇-printing out unknown status                   ∇-setting the colour to light gray the default colour    ∇-printing the spacer                 ∇-printing the string
+                if self.print("[ ").is_err()
+                    || self.set_forground_colour(Colour::DarkGray).is_err()
+                    || self.print("UNKNOWN STATUS").is_err()
+                    || self.set_forground_colour(Colour::LightGray).is_err()
+                    || self.print(" ] - ").is_err()
+                    || self.println(string).is_err()
+                {
                     return Status::Aborted;
                 }
             }
@@ -156,17 +154,24 @@ impl simple_text_output::Protocol<'_> {
     }
 
     pub fn print_env_info(&self, package_name: &str, package_authors: &str, package_version: &str) -> Status {
-        if self.set_forground_colour(Colour::Green).is_err()
-            || self.print("[INFO]").is_err()
+        if self.print("[ ").is_err()
+            || self.set_forground_colour(Colour::Green).is_err()
+            || self.print("INFO").is_err()
             || self.set_forground_colour(Colour::LightGray).is_err()
-            || self.print(" - ").is_err()
+            || self.print(" ] - ").is_err()
             || self.print(package_name).is_err()
             || self.print(" by: ").is_err()
             || self.println(package_authors).is_err()
         {
             return Status::Aborted;
         }
-        if self.set_forground_colour(Colour::Green).is_err() || self.print("[VERS]").is_err() || self.set_forground_colour(Colour::LightGray).is_err() || self.print(" - bootloader version: ").is_err() || self.println(package_version).is_err() {
+        if self.print("[ ").is_err()
+            || self.set_forground_colour(Colour::Green).is_err()
+            || self.print("VERS").is_err()
+            || self.set_forground_colour(Colour::LightGray).is_err()
+            || self.print(" ] - bootloader version: ").is_err()
+            || self.println(package_version).is_err()
+        {
             return Status::Aborted;
         }
         Status::Success

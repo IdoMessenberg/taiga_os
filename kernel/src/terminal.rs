@@ -43,7 +43,7 @@ impl Output {
                 self.put_char(' ');
             }
             _ => {
-                if self.info.x > self.pixels_per_scan_line as u64{
+                if self.info.x > self.pixels_per_scan_line as u64 {
                     self.info.x = 0;
                     self.info.y += self.glyph_char_size as u64;
                 }
@@ -51,8 +51,8 @@ impl Output {
                 for y in self.info.y..self.info.y + self.glyph_char_size as u64 {
                     for x in self.info.x..self.info.x + 8 {
                         match (*glyph_buffer_char_ptr) & (0b10000000 >> (x - self.info.x)) != 0 {
-                            true => core::ptr::write_unaligned((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.foreground_colour),
-                            false => core::ptr::write_unaligned((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour),
+                            true => core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.foreground_colour),
+                            false => core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour),
                         }
                     }
                     glyph_buffer_char_ptr = glyph_buffer_char_ptr.add(1);
@@ -62,8 +62,7 @@ impl Output {
         }
     }
 
-    pub unsafe fn put_usize(&mut self, num: &usize)
-    {
+    pub unsafe fn put_usize(&mut self, num: &usize) {
         let mut i = 1;
         if i <= num / 10 {
             for _ in 0..17 {
@@ -88,7 +87,7 @@ impl Output {
     pub fn clear_screen(&self) {
         for y in 0..self.vertical_resolution as u64 {
             for x in 0..self.horizontal_resolution as u64 {
-                unsafe { core::ptr::write_unaligned((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour) };
+                unsafe { core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour) };
             }
         }
     }
@@ -104,4 +103,8 @@ impl Output {
         self.print("\r\n");
     }
 
+    pub fn set_cursor_position(&mut self, x: u64, y: u64){
+        self.info.x = x * 8;
+        self.info.y = y * self.glyph_char_size as u64;
+    }
 }

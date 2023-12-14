@@ -15,20 +15,20 @@ type KernelEntry = extern "efiapi" fn(BootInfo);
 
 #[repr(C)]
 struct BootInfo {
-    graphics: efi::graphics::Info,
-    font:     psf::FontInfo,
+    graphics:   efi::graphics::Info,
+    font:       psf::FontInfo,
+    memory_map: efi::alloc::MemoryMapInfo,
 }
 
 #[export_name = "efi_main"]
 extern "efiapi" fn main(handle: *const core::ffi::c_void, system_table: efi::system::Table) -> efi::Status {
-    efi::init(&system_table);
-    system_table.con_out.print_env_info(core::env!("CARGO_PKG_NAME"), core::env!("CARGO_PKG_AUTHORS"), core::env!("CARGO_PKG_VERSION"));
+    efi::init(&system_table, core::env!("CARGO_PKG_NAME"), core::env!("CARGO_PKG_AUTHORS"), core::env!("CARGO_PKG_VERSION"));
 
     let system_root: &efi::protocols::media_access::file::Protocol = if let Ok(root) = efi::file::get_root(handle, system_table.boot_time_services) { root } else { return efi::Status::Aborted };
 
     let kernel_entry_addr = {
         let kernel_file: std_alloc::vec::Vec<u8> = if let Ok(kernel_file_vec) = system_root.load_file(KERNEL_FILE_NAME) { kernel_file_vec } else { return efi::Status::Aborted };
-        system_table.con_out.println_usize("[KERNEL] - File Size - {}kb", &(kernel_file.len() / 1024));
+        system_table.con_out.println_usize("[ KERNEL ] - File Size - {}KiB", &(kernel_file.len() / 1024));
 
         if let Ok(entry) = elf::load_executable(&system_table, &kernel_file) {
             entry
@@ -50,10 +50,20 @@ extern "efiapi" fn main(handle: *const core::ffi::c_void, system_table: efi::sys
         }
     };
     let graphics_info: efi::graphics::Info = if let Ok(info) = system_table.boot_time_services.get_graphics_info() { info } else { return system_table.con_out.println_status("Graphics - Could Not Get Graphics Info!", efi::Status::Aborted) };
-    
+
+    /*
+
+    */
+    let memory_map = if let Ok(mem_map) = system_table.boot_time_services.get_memory_map(&system_table) { mem_map } else { return system_table.con_out.println_status("Memory Map - Could Not Get The Memory Map!", efi::Status::Aborted) };
+
+
     //safety: yeah this shit is unsafe as fuck
     let kernel_entry_point: extern "efiapi" fn(BootInfo) = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
-    kernel_entry_point(BootInfo { graphics: graphics_info, font });
+    if (system_table.boot_time_services.exit_boot_services)(handle, memory_map.key).is_err() {
+        system_table.con_out.println("exit err");
+        panic!();//return system_table.con_out.println_status("Boot - Could Not Exit Boot Services!", efi::Status::Aborted);
+    };
+    kernel_entry_point(BootInfo { graphics: graphics_info, font, memory_map });
     panic!()
 }
 

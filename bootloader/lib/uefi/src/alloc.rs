@@ -53,26 +53,28 @@ impl boot_time::Services {
 
     pub fn copy_mem(&self, destination: *const core::ffi::c_void, source: *const core::ffi::c_void, length: usize) { (self.copy_mem)(destination, source, length); }
 
-    pub fn get_memory_map(&self) -> Result<MemoryMapInfo, Status> {
-        //-setting a "empty" memory map
-        let mut memory_map: MemoryMapInfo = MemoryMapInfo { size: 0, key: 0, descriptor_size: 0, desc_version: 0, address: core::ptr::null() };
-        //-calling the get_memory_map function to get the memory map buffer size
-        (self.get_memory_map)(&memory_map.size, memory_map.address, &memory_map.key, &memory_map.descriptor_size, &memory_map.desc_version);
-        //-setting the bigger size for the memory buffer
-        memory_map.size += 2 * memory_map.desc_version as usize;
-        //-stting the bigger size for the memory map
-        if (self.allocate_pool)(MemoryType::LoaderData, memory_map.size, memory_map.address as *const *const core::ffi::c_void).is_err() {
-            return Err(Status::Aborted);
+    pub fn get_memory_map(&self, system_table: &system::Table) -> Result<MemoryMapInfo, Status> {
+        let map_size: usize = 0;
+        let map_key: usize = 0;
+        let map_descriptor_size: usize = 0;
+        let map_descriptor_version: u32 = 0;
+        let map: *const MemoryDescriptor = core::ptr::null();
+
+        (self.get_memory_map)(&map_size, map, &map_key, &map_descriptor_size, &map_descriptor_version);
+        if (self.allocate_pool)(MemoryType::LoaderData, map_size, &(map as *const core::ffi::c_void) as *const *const core::ffi::c_void).is_err() {
+            return Err(system_table.con_out.println_status(" alloc err", Status::Aborted));
         }
-        //-getting the memory map info with the correct size
-        (self.get_memory_map)(&memory_map.size, memory_map.address, &memory_map.key, &memory_map.descriptor_size, &memory_map.desc_version);
-        Ok(memory_map)
+        (self.get_memory_map)(&map_size, map, &map_key, &map_descriptor_size, &map_descriptor_version);
+
+        Ok(MemoryMapInfo { size: map_size, key: map_key, descriptor_size: map_descriptor_size, map_descriptor_version, address: map })
     }
 }
+
+#[repr(C)]
 pub struct MemoryMapInfo {
-    pub size:            usize,
-    pub key:             usize,
-    pub descriptor_size: usize,
-    pub desc_version:    u32,
-    pub address:         *const MemoryDescriptor,
+    pub size:                   usize,
+    pub key:                    usize,
+    pub descriptor_size:        usize,
+    pub map_descriptor_version: u32,
+    pub address:                *const MemoryDescriptor,
 }
