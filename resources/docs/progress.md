@@ -8,3 +8,6 @@
     ![](../images/screenshots/4_extra_info.png)
 5. 
     ![](../images/screenshots/5_loaded_font_to_kernel.png)
+    
+ 6. 
+    ![](../images/screenshots/6_got_memory_map.png)

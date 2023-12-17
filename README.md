@@ -12,11 +12,11 @@
    /__\   in rust from scratch with no external libraries
    / .\   target: x86_64
   /____\  uefi boot: true
-  /  . \        _
- /  .   \    |\'/-..--.
-/________\  / _ _   ,  ;
-   |  |    `~=`Y'~_<._./
-   |  |	    <`-....__.'
+  /  . \         _
+ /  .   \     |\'/-..--.
+/________\   / _ _   ,  ;
+   |  |     `~=`Y'~_<._./
+   |  |	     <`-....__.'
 ```
 
 ## features 🐈
@@ -38,6 +38,9 @@
 
 ## current progress
 
-![](resources/images/screenshots/5_loaded_font_to_kernel.png)
+![](resources/images/screenshots/6_got_memory_map.png)
 ## bugs
 * efi status is u32  and not usize even though it needs to be usize because it brakes the load file function and it won't work
+
+## todo 
+* find a good way to structure the kernel crate and it's libraries
