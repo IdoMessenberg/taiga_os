@@ -53,28 +53,31 @@ impl boot_time::Services {
 
     pub fn copy_mem(&self, destination: *const core::ffi::c_void, source: *const core::ffi::c_void, length: usize) { (self.copy_mem)(destination, source, length); }
 
-    pub fn get_memory_map(&self, system_table: &system::Table) -> Result<MemoryMapInfo, Status> {
-        let map_size: usize = 0;
-        let map_key: usize = 0;
-        let map_descriptor_size: usize = 0;
-        let map_descriptor_version: u32 = 0;
+    pub fn get_memory_map(&self) -> Result<MemoryMapInfo, Status> {
+        let size: usize = 0;
+        let key: usize = 0;
+        let descriptor_size: usize = 0;
+        let descriptor_version: u32 = 0;
         let map: *const MemoryDescriptor = core::ptr::null();
-
-        (self.get_memory_map)(&map_size, map, &map_key, &map_descriptor_size, &map_descriptor_version);
-        if (self.allocate_pool)(MemoryType::LoaderData, map_size, &(map as *const core::ffi::c_void) as *const *const core::ffi::c_void).is_err() {
-            return Err(system_table.con_out.println_status(" alloc err", Status::Aborted));
+        (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version);
+        if map != core::ptr::null() {
+            (self.free_pool)(map as *const core::ffi::c_void);
         }
-        (self.get_memory_map)(&map_size, map, &map_key, &map_descriptor_size, &map_descriptor_version);
-
-        Ok(MemoryMapInfo { size: map_size, key: map_key, descriptor_size: map_descriptor_size, map_descriptor_version, address: map })
+        if (self.allocate_pool)(MemoryType::LoaderData, size, &map as *const *const _ as *const *const core::ffi::c_void).is_err() {
+            return Err(Status::Aborted);
+        }
+        if (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version).is_ok() {
+            return Ok(MemoryMapInfo { address: map as u64, size, key, descriptor_size, descriptor_version });
+        }
+        Err(Status::Aborted)
     }
 }
 
 #[repr(C)]
 pub struct MemoryMapInfo {
+    pub address:                u64,
     pub size:                   usize,
     pub key:                    usize,
     pub descriptor_size:        usize,
-    pub map_descriptor_version: u32,
-    pub address:                *const MemoryDescriptor,
+    pub descriptor_version: u32,
 }

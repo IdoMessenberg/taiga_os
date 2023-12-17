@@ -12,16 +12,21 @@
    /__\   in rust from scratch with no external libraries
    / .\   target: x86_64
   /____\  uefi boot: true
-  /  . \       _
- /  .   \   |\'/-..--.
-/________\ / _ _   ,  ;
-   |  |   `~=`Y'~_<._./
-   |  |	  <`-....__.'
+  /  . \        _
+ /  .   \    |\'/-..--.
+/________\  / _ _   ,  ;
+   |  |    `~=`Y'~_<._./
+   |  |	    <`-....__.'
 ```
 
 ## features 🐈
 * [x] custom x86_64 UEFI bootloader
 * [ ] a simple shell
+    * [ ] simple PS2 driver ⌨️
+    * [ ] simple lexer
+    * [ ] some system calls and functions
+* [ ] run a form of  doom💥
+
 ## how to build
 * rust compiler
 * qemu
@@ -36,4 +41,3 @@
 ![](resources/images/screenshots/5_loaded_font_to_kernel.png)
 ## bugs
 * efi status is u32  and not usize even though it needs to be usize because it brakes the load file function and it won't work
-* can not get a correct memory map 

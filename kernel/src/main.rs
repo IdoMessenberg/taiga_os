@@ -2,6 +2,10 @@
 #![no_std]
 #![no_main]
 
+extern crate efi_graphics_output;
+extern crate utility;
+extern crate fonts;
+
 mod terminal;
 
 ///-the info from the bootloader is allign in efi format so the _start function needs to be an efi function -> extern "efiapi"
@@ -9,19 +13,19 @@ mod terminal;
 extern "efiapi" fn get_boot_info(boot_info: BootInfo) -> ! { main(boot_info) }
 
 pub extern "C" fn main(boot_info: BootInfo) -> ! {
-    let mut con_out: terminal::Output = terminal::Output::new(&boot_info.graphics, boot_info.font);
-    con_out.init();
+
+    let mut con_out: terminal::Output = terminal::Output::new(&boot_info);
+    con_out.clear_screen();
     con_out.println("hello world!");
     con_out.println(core::env!("CARGO_PKG_NAME"));
     con_out.println("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+=-\\|/?.,><;:'\"`~");
     let map_e = boot_info.mem_map_info.size / boot_info.mem_map_info.descriptor_size;
-    unsafe{
-        con_out.put_usize(&map_e);
-        con_out.print("\r\n")
-    }
+    con_out.put_usize(&map_e);
+    con_out.print("\r\n");
+
     for i in 0..map_e {
         unsafe {
-            let t = (*boot_info.mem_map_info.address.add(i * boot_info.mem_map_info.descriptor_size)).r#type as usize;
+            let t = (core::ptr::read_volatile((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const MemoryDescriptor).r#type) as usize;
             con_out.put_usize(&t);
             con_out.print("-");
             if t < 17 {
@@ -29,47 +33,29 @@ pub extern "C" fn main(boot_info: BootInfo) -> ! {
             }
             con_out.print(" ");
 
-            con_out.put_usize(&((*boot_info.mem_map_info.address.add(i * boot_info.mem_map_info.descriptor_size)).number_of_pages as usize * 4096 / 1024));
-            con_out.print("\r\n");
+            con_out.put_usize(&(core::ptr::read_volatile((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const MemoryDescriptor).number_of_pages as usize * 4096 / 1024));
+            con_out.print("KiB\r\n");
         };
     }
 
     con_out.println("end");
-
-    con_out.set_cursor_position(50, 30);
-    con_out.print("<------this is a bug - the memory map should not look like that");
     panic!();
 }
 
 #[repr(C)]
 pub struct BootInfo {
-    graphics:     GraphicsInfo,
-    font:         FontInfo,
+    graphics:     efi_graphics_output::Info,
+    font:         fonts::psf::Info,
     mem_map_info: MemMapInfo,
 }
 
 #[repr(C)]
-struct FontInfo {
-    pub glyph_char_size:           u8,
-    pub glyph_buffer_base_address: *const core::ffi::c_void,
-}
-
-#[repr(C)]
-struct GraphicsInfo {
-    pub frame_buffer_base_address: u64,
-    pub frame_buffer_size:         usize,
-    pub horizontal_resolution:     u32,
-    pub vertical_resolution:       u32,
-    pub pixels_per_scan_line:      u32,
-}
-
-#[repr(C)]
 struct MemMapInfo {
+    pub address:                u64,
     pub size:                   usize,
     pub key:                    usize,
     pub descriptor_size:        usize,
     pub map_descriptor_version: u32,
-    pub address:                *const MemoryDescriptor,
 }
 
 #[repr(C)]

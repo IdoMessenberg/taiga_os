@@ -15,9 +15,9 @@ type KernelEntry = extern "efiapi" fn(BootInfo);
 
 #[repr(C)]
 struct BootInfo {
-    graphics:   efi::graphics::Info,
-    font:       psf::FontInfo,
-    memory_map: efi::alloc::MemoryMapInfo,
+    graphics:        efi::graphics::Info,
+    font:            psf::FontInfo,
+    memory_map_info: efi::alloc::MemoryMapInfo,
 }
 
 #[export_name = "efi_main"]
@@ -51,19 +51,13 @@ extern "efiapi" fn main(handle: *const core::ffi::c_void, system_table: efi::sys
     };
     let graphics_info: efi::graphics::Info = if let Ok(info) = system_table.boot_time_services.get_graphics_info() { info } else { return system_table.con_out.println_status("Graphics - Could Not Get Graphics Info!", efi::Status::Aborted) };
 
-    /*
-
-    */
-    let memory_map = if let Ok(mem_map) = system_table.boot_time_services.get_memory_map(&system_table) { mem_map } else { return system_table.con_out.println_status("Memory Map - Could Not Get The Memory Map!", efi::Status::Aborted) };
-
-
-    //safety: yeah this shit is unsafe as fuck
-    let kernel_entry_point: extern "efiapi" fn(BootInfo) = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
+    let memory_map = if let Ok(mem_map) = system_table.boot_time_services.get_memory_map() { mem_map } else { return system_table.con_out.println_status("Memory Map - Could Not Get The Memory Map!", efi::Status::Aborted) };
     if (system_table.boot_time_services.exit_boot_services)(handle, memory_map.key).is_err() {
-        system_table.con_out.println("exit err");
-        panic!();//return system_table.con_out.println_status("Boot - Could Not Exit Boot Services!", efi::Status::Aborted);
-    };
-    kernel_entry_point(BootInfo { graphics: graphics_info, font, memory_map });
+        return system_table.con_out.println_status("Boot - Could Not Exit Boot Services!", efi::Status::Aborted);
+    }
+    //safety: yeah this shit is unsafe as fuck
+    let kernel_entry_point: KernelEntry = unsafe { core::mem::transmute::<usize, KernelEntry>(kernel_entry_addr) };
+    kernel_entry_point(BootInfo { graphics: graphics_info, font, memory_map_info: memory_map });
     panic!()
 }
 

@@ -1,41 +1,21 @@
-//*/-kernel/src/terminal.rs
-use crate::{FontInfo, GraphicsInfo};
+use crate::BootInfo;
 
-pub struct Output {
-    pub info:                  Info,
-    frame_buffer_base_address: u64,
-    pixels_per_scan_line:      u32,
-    glyph_char_size:           u8,
-    glyph_buffer_base_address: *const core::ffi::c_void,
-    horizontal_resolution:     u32,
-    vertical_resolution:       u32,
-}
-
-pub struct Info {
-    x:                     u64,
-    y:                     u64,
+pub struct Output{
+    graphics_output: efi_graphics_output::Info,
+    font: fonts::psf::Info,
+    cursor_position: utility::Point<u32>,
     pub background_colour: u32,
     pub foreground_colour: u32,
 }
 
 impl Output {
-    pub fn new(graphics_info: &GraphicsInfo, font_info: FontInfo) -> Self {
-        Output {
-            info:                      Info { x: 0, y: 0, background_colour: 0x171819, foreground_colour: 0xB1AD8D },
-            frame_buffer_base_address: graphics_info.frame_buffer_base_address,
-            pixels_per_scan_line:      graphics_info.pixels_per_scan_line,
-            glyph_char_size:           font_info.glyph_char_size,
-            glyph_buffer_base_address: font_info.glyph_buffer_base_address,
-            horizontal_resolution:     graphics_info.horizontal_resolution,
-            vertical_resolution:       graphics_info.vertical_resolution,
-        }
+    pub fn new(boot_info: &BootInfo) -> Self {
+        Output { graphics_output: boot_info.graphics, font: boot_info.font, cursor_position: utility::Point { x: 0, y: 0 }, background_colour: 0x171819, foreground_colour: 0xB1AD8D }
     }
-    pub fn init(&self) { self.clear_screen() }
-
-    unsafe fn put_char(&mut self, char: char) {
+    pub fn put_char(&mut self, char: char){
         match char {
-            '\r' => self.info.x = 0,
-            '\n' => self.info.y += self.glyph_char_size as u64,
+            '\r' => self.cursor_position.x = 0,
+            '\n' => self.cursor_position.y += 1,
             '\t' => {
                 self.put_char(' ');
                 self.put_char(' ');
@@ -43,26 +23,19 @@ impl Output {
                 self.put_char(' ');
             }
             _ => {
-                if self.info.x > self.pixels_per_scan_line as u64 {
-                    self.info.x = 0;
-                    self.info.y += self.glyph_char_size as u64;
+                if self.cursor_position.x * 8 > self.graphics_output.horizontal_resolution {
+                    self.cursor_position.x = 0;
+                    self.cursor_position.y += 1;
                 }
-                let mut glyph_buffer_char_ptr: *const u8 = self.glyph_buffer_base_address.add(char as usize * self.glyph_char_size as usize).cast::<u8>();
-                for y in self.info.y..self.info.y + self.glyph_char_size as u64 {
-                    for x in self.info.x..self.info.x + 8 {
-                        match (*glyph_buffer_char_ptr) & (0b10000000 >> (x - self.info.x)) != 0 {
-                            true => core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.foreground_colour),
-                            false => core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour),
-                        }
-                    }
-                    glyph_buffer_char_ptr = glyph_buffer_char_ptr.add(1);
+                unsafe{
+                    self.font.print_char(&self.graphics_output, utility::Point { x: self.cursor_position.x * 8, y: self.cursor_position.y * self.font.glyph_size as u32 }, char, self.background_colour, self.foreground_colour)
                 }
-                self.info.x += 8;
+                self.cursor_position.x += 1;
             }
         }
     }
 
-    pub unsafe fn put_usize(&mut self, num: &usize) {
+    pub fn put_usize(&mut self, num: &usize) {
         let mut i = 1;
         if i <= num / 10 {
             for _ in 0..17 {
@@ -85,16 +58,16 @@ impl Output {
     }
 
     pub fn clear_screen(&self) {
-        for y in 0..self.vertical_resolution as u64 {
-            for x in 0..self.horizontal_resolution as u64 {
-                unsafe { core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * y + 4 * x) as *mut u32, self.info.background_colour) };
+        for y in 0..self.graphics_output.vertical_resolution {
+            for x in 0..self.graphics_output.horizontal_resolution {
+                unsafe { self.graphics_output.put_pixel(self.background_colour, utility::Point { x, y })}
             }
         }
     }
-
+    
     pub fn print(&mut self, string: &str) {
         for char in string.chars() {
-            unsafe { self.put_char(char) };
+            self.put_char(char);
         }
     }
 
@@ -103,8 +76,8 @@ impl Output {
         self.print("\r\n");
     }
 
-    pub fn set_cursor_position(&mut self, x: u64, y: u64){
-        self.info.x = x * 8;
-        self.info.y = y * self.glyph_char_size as u64;
+    pub fn set_cursor_position(&mut self, new_position: utility::Point<u32>){
+        self.cursor_position = new_position
     }
+
 }
