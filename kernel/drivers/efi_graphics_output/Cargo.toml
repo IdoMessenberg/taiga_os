@@ -1,7 +1,0 @@
-[package]
-name = "efi_graphics_output"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-utility = {path = "../../lib/utility"}

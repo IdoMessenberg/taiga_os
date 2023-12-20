@@ -1,8 +1,0 @@
-[package]
-name = "fonts"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-efi_graphics_output = {path = "../../drivers/efi_graphics_output"}
-utility = {path = "../../lib/utility"}

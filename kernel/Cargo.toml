@@ -10,10 +10,13 @@ name = "kernel"
 test = false
 bench = false
 
+[lib]
+path = "src/lib.rs"
+name = "taiga64"
+test = false
+bench = false
+
 [profile.release]
 strip = true
 
 [dependencies]
-efi_graphics_output = {path = "drivers/efi_graphics_output"}
-fonts = {path = "lib/fonts"}
-utility = {path = "lib/utility"}

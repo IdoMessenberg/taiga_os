@@ -1,11 +1,6 @@
 //*/-kernel/src/main.rs
 #![no_std]
 #![no_main]
-
-extern crate efi_graphics_output;
-extern crate utility;
-extern crate fonts;
-
 mod terminal;
 
 ///-the info from the bootloader is allign in efi format so the _start function needs to be an efi function -> extern "efiapi"
@@ -20,23 +15,27 @@ pub extern "C" fn main(boot_info: BootInfo) -> ! {
     con_out.println(core::env!("CARGO_PKG_NAME"));
     con_out.println("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+=-\\|/?.,><;:'\"`~");
     let map_e = boot_info.mem_map_info.size / boot_info.mem_map_info.descriptor_size;
-    con_out.put_usize(&map_e);
-    con_out.print("\r\n");
-
-    for i in 0..map_e {
+    let mut mem_size = 0;
+    for i in 0..map_e -1{
+        /*
         unsafe {
             let t = (core::ptr::read_volatile((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const MemoryDescriptor).r#type) as usize;
             con_out.put_usize(&t);
             con_out.print("-");
-            if t < 17 {
-                con_out.print(MEM_TYPES[t]);
-            }
+            con_out.print(MEM_TYPES[t]);
+
             con_out.print(" ");
 
             con_out.put_usize(&(core::ptr::read_volatile((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const MemoryDescriptor).number_of_pages as usize * 4096 / 1024));
             con_out.print("KiB\r\n");
         };
+        */
+        unsafe {
+            mem_size += core::ptr::read_volatile((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const MemoryDescriptor).number_of_pages as usize * 4096;
+        }
     }
+    con_out.print("\r\n");
+    con_out.put_usize(&(mem_size/1024/1024));
 
     con_out.println("end");
     panic!();
@@ -44,8 +43,8 @@ pub extern "C" fn main(boot_info: BootInfo) -> ! {
 
 #[repr(C)]
 pub struct BootInfo {
-    graphics:     efi_graphics_output::Info,
-    font:         fonts::psf::Info,
+    graphics:     taiga64::drivers::efi_graphics_output::Info,
+    font:         taiga64::psf::Info,
     mem_map_info: MemMapInfo,
 }
 

@@ -1,5 +1,4 @@
-#![no_std]
-extern crate utility;
+use crate::data_types::Point;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -12,7 +11,7 @@ pub struct Info {
 }
 
 impl Info {
-    pub unsafe fn put_pixel(&self, colour: u32, position : utility::Point<u32>) {
+    pub unsafe fn put_pixel(&self, colour: u32, position : Point<u32>) {
         if position.x < self.horizontal_resolution && position.y < self.vertical_resolution {
             core::ptr::write_volatile((self.frame_buffer_base_address + 4 * self.pixels_per_scan_line as u64 * position.y as u64 + 4 * position.x as u64) as *mut u32, colour)
         }
