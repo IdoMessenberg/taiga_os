@@ -40,7 +40,4 @@
 
 ![](resources/images/screenshots/6_got_memory_map.png)
 ## bugs
-* efi status is u32  and not usize even though it needs to be usize because it brakes the load file function and it won't work
-
-## todo 
-* find a good way to structure the kernel crate and it's libraries
+* efi status is u32  and not usize even though it needs to be usize, because it(being a usize) brakes the load file function and it won't work for some reason 
