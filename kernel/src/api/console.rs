@@ -1,5 +1,4 @@
-use taiga64::{data_types::Point, drivers::efi_graphics_output, psf};
-use crate::BootInfo;
+use crate::{data_types::Point, drivers::efi_graphics_output, fonts::psf, boot};
 pub struct Output{
     graphics_output: efi_graphics_output::Info,
     font: psf::Info,
@@ -9,7 +8,7 @@ pub struct Output{
 }
 
 impl Output {
-    pub fn new(boot_info: &BootInfo) -> Self {
+    pub fn new(boot_info: &boot::Info) -> Self {
         Output { graphics_output: boot_info.graphics, font: boot_info.font, cursor_position: Point { x: 0, y: 0 }, background_colour: 0x171819, foreground_colour: 0xB1AD8D }
     }
     pub fn put_char(&mut self, char: char){

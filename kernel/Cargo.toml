@@ -12,7 +12,7 @@ bench = false
 
 [lib]
 path = "src/lib.rs"
-name = "taiga64"
+name = "taiga"
 test = false
 bench = false
 
