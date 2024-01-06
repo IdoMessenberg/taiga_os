@@ -41,3 +41,7 @@
 ![](resources/images/screenshots/6_got_memory_map.png)
 ## bugs
 * efi status is u32  and not usize even though it needs to be usize, because it(being a usize) brakes the load file function and it won't work for some reason 
+* memory map index is smaller then it is supposed to be
+
+## current mode
+![](mode_image.png)

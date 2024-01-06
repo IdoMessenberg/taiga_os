@@ -12,7 +12,7 @@ pub struct Psf1Header {
 
 #[repr(C)]
 pub struct FontInfo {
-    pub char_size:    u8,
+    pub char_size:                 u8,
     pub glyph_buffer_base_address: u64,
 }
 

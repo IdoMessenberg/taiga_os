@@ -16,6 +16,7 @@ name = "taiga"
 test = false
 bench = false
 
+
 [profile.release]
 strip = true
 

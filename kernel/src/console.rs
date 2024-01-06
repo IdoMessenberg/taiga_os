@@ -1,17 +1,15 @@
-use crate::{data_types::Point, drivers::efi_graphics_output, fonts::psf, boot};
-pub struct Output{
-    graphics_output: efi_graphics_output::Info,
-    font: psf::Info,
-    cursor_position: Point<u32>,
+use crate::{boot, data_types::Point, efi_graphics_output, psf};
+pub struct Output {
+    graphics_output:       efi_graphics_output::Info,
+    font:                  psf::Info,
+    cursor_position:       Point<u32>,
     pub background_colour: u32,
     pub foreground_colour: u32,
 }
 
 impl Output {
-    pub fn new(boot_info: &boot::Info) -> Self {
-        Output { graphics_output: boot_info.graphics, font: boot_info.font, cursor_position: Point { x: 0, y: 0 }, background_colour: 0x171819, foreground_colour: 0xB1AD8D }
-    }
-    pub fn put_char(&mut self, char: char){
+    pub fn new(boot_info: &boot::Info) -> Self { Output { graphics_output: boot_info.graphics, font: boot_info.font, cursor_position: Point { x: 0, y: 0 }, background_colour: 0x171819, foreground_colour: 0xB1AD8D } }
+    pub fn put_char(&mut self, char: char) {
         match char {
             '\r' => self.cursor_position.x = 0,
             '\n' => self.cursor_position.y += 1,
@@ -26,9 +24,7 @@ impl Output {
                     self.cursor_position.x = 0;
                     self.cursor_position.y += 1;
                 }
-                unsafe{
-                    self.font.print_char(&self.graphics_output, Point { x: self.cursor_position.x * 8, y: self.cursor_position.y * self.font.glyph_size as u32 }, char, self.background_colour, self.foreground_colour)
-                }
+                unsafe { self.font.print_char(&self.graphics_output, Point { x: self.cursor_position.x * 8, y: self.cursor_position.y * self.font.glyph_size as u32 }, char, self.background_colour, self.foreground_colour) }
                 self.cursor_position.x += 1;
             }
         }
@@ -59,11 +55,11 @@ impl Output {
     pub fn clear_screen(&self) {
         for y in 0..self.graphics_output.vertical_resolution {
             for x in 0..self.graphics_output.horizontal_resolution {
-                unsafe { self.graphics_output.put_pixel(self.background_colour, Point { x, y })}
+                unsafe { self.graphics_output.put_pixel(self.background_colour, Point { x, y }) }
             }
         }
     }
-    
+
     pub fn print(&mut self, string: &str) {
         for char in string.chars() {
             self.put_char(char);
@@ -75,8 +71,5 @@ impl Output {
         self.print("\r\n");
     }
 
-    pub fn set_cursor_position(&mut self, new_position: Point<u32>){
-        self.cursor_position = new_position
-    }
-
+    pub fn set_cursor_position(&mut self, new_position: Point<u32>) { self.cursor_position = new_position }
 }

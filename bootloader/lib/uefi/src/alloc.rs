@@ -60,16 +60,16 @@ impl boot_time::Services {
         let descriptor_version: u32 = 0;
         let map: *const MemoryDescriptor = core::ptr::null();
         (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version);
-        for _ in 0..10{
+        for _ in 0..10 {
             if map != core::ptr::null() {
-                if (self.free_pool)(map as *const core::ffi::c_void).is_err(){
+                if (self.free_pool)(map as *const core::ffi::c_void).is_err() {
                     return Err(Status::Aborted);
                 }
             }
             if (self.allocate_pool)(MemoryType::LoaderData, size, &map as *const *const _ as *const *const core::ffi::c_void).is_err() {
                 return Err(Status::Aborted);
             }
-            if (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version).is_ok() {    
+            if (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version).is_ok() {
                 return Ok(MemoryMapInfo { address: map as u64, size, key, descriptor_size, descriptor_version });
             }
         }
@@ -79,9 +79,9 @@ impl boot_time::Services {
 
 #[repr(C)]
 pub struct MemoryMapInfo {
-    pub address:                u64,
-    pub size:                   usize,
-    pub key:                    usize,
-    pub descriptor_size:        usize,
+    pub address:            u64,
+    pub size:               usize,
+    pub key:                usize,
+    pub descriptor_size:    usize,
     pub descriptor_version: u32,
 }
