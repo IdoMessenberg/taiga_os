@@ -21,7 +21,9 @@
 
 ## features 🐈
 * [x] custom x86_64 UEFI bootloader
-* [ ] a simple shell
+* [x] simple console output in the kernel
+* [x] very simple memory paging
+ * [ ] a simple shell
     * [ ] simple PS2 driver ⌨️
     * [ ] simple lexer
     * [ ] some system calls and functions
