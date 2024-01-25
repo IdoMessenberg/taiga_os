@@ -15,11 +15,11 @@ type KernelEntry = extern "efiapi" fn(BootInfo);
 
 #[repr(C)]
 struct BootInfo {
-    graphics:        efi::graphics::Info,
-    font:            psf::FontInfo,
-    memory_map_info: efi::alloc::MemoryMapInfo,
+    graphics:             efi::graphics::Info,
+    font:                 psf::FontInfo,
+    memory_map_info:      efi::alloc::MemoryMapInfo,
     kernel_entry_address: u64,
-    kernel_size: usize
+    kernel_size:          usize,
 }
 
 #[export_name = "efi_main"]

@@ -35,7 +35,7 @@ impl Output {
         if i <= num / 10 {
             for _ in 0..17 {
                 i *= 10;
-                if i >= num / 10 {
+                if i > num / 10 {
                     break;
                 }
             }

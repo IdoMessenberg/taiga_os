@@ -15,7 +15,7 @@ pub fn init(system_table: &system::Table, package_name: &str, package_authors: &
 #[repr(C)]
 pub struct Info {
     pub frame_buffer_base_address: u64,
-    pub frame_buffer_size:         usize,
+    pub frame_buffer_size:         u64,
     pub horizontal_resolution:     u32,
     pub vertical_resolution:       u32,
     pub pixels_per_scan_line:      u32,
@@ -38,7 +38,7 @@ impl boot_time::Services {
         };
         Ok(Info {
             frame_buffer_base_address: gop.mode.frame_buffer_base,
-            frame_buffer_size:         gop.mode.frame_buffer_size,
+            frame_buffer_size:         gop.mode.frame_buffer_size as u64,
             horizontal_resolution:     gop.mode.info.horizontal_resolution,
             vertical_resolution:       gop.mode.info.vertical_resolution,
             pixels_per_scan_line:      gop.mode.info.pixels_per_scan_line,

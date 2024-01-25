@@ -23,6 +23,7 @@
 * [x] custom x86_64 UEFI bootloader
 * [x] simple console output in the kernel
 * [x] very simple memory paging
+* [ ] virtual memory
  * [ ] a simple shell
     * [ ] simple PS2 driver ⌨️
     * [ ] simple lexer
@@ -40,7 +41,21 @@
 
 ## current progress
 
-![](resources/images/screenshots/6_got_memory_map.png)
+![](resources/images/screenshots/7_memory_paging.png)
 ## bugs
 * efi status is u32  and not usize even though it needs to be usize, because it(being a usize) brakes the load file function and it won't work for some reason 
 * memory map index is smaller then it is supposed to be
+* page table manager overwrites the bitmap 
+  
+  
+## development roadmap
+there will be commits between these ones but these are the main steps in the road map
+  
+```mermaid
+	gitGraph LR:
+	commit id: "starting_memory_paging"
+	branch bootloader-updates-and-fixes
+	commit id: "removing_global_allocator"
+	commit id: "align_kernel"
+```
+

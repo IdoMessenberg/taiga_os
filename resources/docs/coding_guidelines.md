@@ -1,4 +1,5 @@
-# safety
+# coding guidelines
+## safety
 ## [the power of ten](https://en.wikipedia.org/wiki/The_Power_of_10:_Rules_for_Developing_Safety-Critical_Code)
 the power of ten are rules for coding for reliable software
 1. Avoid complex flow constructs, such as goto and recursion.
