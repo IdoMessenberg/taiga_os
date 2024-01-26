@@ -48,14 +48,4 @@
 * page table manager overwrites the bitmap 
   
   
-## development roadmap
-there will be commits between these ones but these are the main steps in the road map
-  
-```mermaid
-	gitGraph LR:
-	commit id: "starting_memory_paging"
-	branch bootloader-updates-and-fixes
-	commit id: "removing_global_allocator"
-	commit id: "align_kernel"
-```
 
