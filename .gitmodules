@@ -1,0 +1,6 @@
+[submodule "kernel"]
+	path = src/kernel
+	url = https://github.com/IdoMessenberg/taiga_kernel.git
+[submodule "bootloader"]
+	path = src/bootloader
+	url = https://github.com/IdoMessenberg/taiga_bootloader.git
