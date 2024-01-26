@@ -1,0 +1,8 @@
+#*/-kernel/.cargo/config.toml
+[build]
+target = ["x86_64-unknown-none"]
+target-dir = "../../target"
+
+#-this canges the ELF e type from dynamic (DYN) to static position independent executable (pie) which is e type is EXEC and not DYN
+[target.x86_64-unknown-none]
+rustflags = ["-C", "relocation-model=static", "-C","link-arg=-Tkernel.ld"]
