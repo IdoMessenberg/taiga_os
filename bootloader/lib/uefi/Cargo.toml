@@ -1,8 +1,0 @@
-#*/-bootloader/lib/uefi/cargo.toml
-[package]
-name = "uefi"
-version = "0.1.0"
-edition = "2021"
-
-[lints.clippy]
-undocumented_unsafe_blocks = "warn"
