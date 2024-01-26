@@ -1,0 +1,3 @@
+[submodule "kernel"]
+	path = src
+	url = https://github.com/IdoMessenberg/taiga_kernel.git
