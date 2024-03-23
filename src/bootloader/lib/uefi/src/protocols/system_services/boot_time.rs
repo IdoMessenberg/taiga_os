@@ -11,7 +11,7 @@ pub struct Services {
     restore_tpl:                           extern "efiapi" fn() -> Status,
     pub allocate_pages:                    extern "efiapi" fn(r#type: AllocateType, memory_type: MemoryType, pages: usize, memory_adrr: *const u64) -> Status,
     free_pages:                            extern "efiapi" fn() -> Status,
-    pub get_memory_map:                    extern "efiapi" fn(memory_map_size: *const usize, memory_map: *const MemoryDescriptor, map_key: *const usize, descriptor_size: *const usize, descriptor_version: *const u32) -> Status,
+    pub get_memory_map:                    extern "efiapi" fn(memory_map_size: *mut usize, memory_map: *const MemoryDescriptor, map_key: *mut usize, descriptor_size: *mut usize, descriptor_version: *const u32) -> Status,
     pub allocate_pool:                     AllocatePool,
     pub free_pool:                         FreePool,
     create_event:                          extern "efiapi" fn() -> Status,

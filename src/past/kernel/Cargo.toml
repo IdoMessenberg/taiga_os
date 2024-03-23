@@ -1,3 +1,4 @@
+#*/-kernel/cargo.toml
 [package]
 name = "taiga-os-kernel"
 version = "0.0.0"
@@ -19,5 +20,6 @@ bench = false
 [profile.release]
 opt-level = 3
 strip = "debuginfo"
+
 
 [dependencies]

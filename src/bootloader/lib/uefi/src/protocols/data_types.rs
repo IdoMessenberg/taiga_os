@@ -7,8 +7,7 @@ pub struct Guid(pub u32, pub u16, pub u16, pub [u8; 8]);
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=2269
 ///status code, type u32
-///todo: bug! - this needs to be a usize enum but it brakes the file protocol - reason unknown
-#[repr(u32)]
+#[repr(usize)]
 #[derive(PartialEq, Clone, Copy)]
 pub enum Status {
     Success             = 0,
@@ -45,13 +44,13 @@ pub enum Status {
     CompromisedData     = 33,
     IpAddressConflict   = 34,
     HttpError           = 35,
-    UnknownGlyph        = i32::MAX as u32 + 2,
-    DeleteFailure       = i32::MAX as u32 + 3,
-    WriteFailure        = i32::MAX as u32 + 4,
-    WarnBufferTooSmall  = i32::MAX as u32 + 5,
-    StaleData           = i32::MAX as u32 + 6,
-    FileSystem          = i32::MAX as u32 + 7,
-    ResetRequired       = i32::MAX as u32 + 8,
+    UnknownGlyph        = i32::MAX as usize + 2,
+    DeleteFailure       = i32::MAX as usize + 3,
+    WriteFailure        = i32::MAX as usize + 4,
+    WarnBufferTooSmall  = i32::MAX as usize + 5,
+    StaleData           = i32::MAX as usize + 6,
+    FileSystem          = i32::MAX as usize + 7,
+    ResetRequired       = i32::MAX as usize + 8,
 }
 impl Status {
     pub fn is_ok(&self) -> bool { self == &Status::Success }

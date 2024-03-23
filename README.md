@@ -24,7 +24,7 @@
 * [x] simple console output in the kernel
 * [x] very simple memory paging
 * [ ] virtual memory
- * [ ] a simple shell
+* [ ] a simple shell
     * [ ] simple PS2 driver ⌨️
     * [ ] simple lexer
     * [ ] some system calls and functions
@@ -43,6 +43,5 @@
 
 ![](resources/images/screenshots/7_memory_paging.png)
 ## bugs
-* efi status is u32  and not usize even though it needs to be usize, because it(being a usize) brakes the load file function and it won't work for some reason 
 * memory map index is smaller then it is supposed to be
 * page table manager overwrites the frame buffer 

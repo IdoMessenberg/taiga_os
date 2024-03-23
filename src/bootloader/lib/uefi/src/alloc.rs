@@ -54,22 +54,20 @@ impl boot_time::Services {
     pub fn copy_mem(&self, destination: *const core::ffi::c_void, source: *const core::ffi::c_void, length: usize) { (self.copy_mem)(destination, source, length); }
 
     pub fn get_memory_map(&self) -> Result<MemoryMapInfo, Status> {
-        let size: usize = 0;
-        let key: usize = 0;
-        let descriptor_size: usize = 0;
-        let descriptor_version: u32 = 0;
-        let map: *const MemoryDescriptor = core::ptr::null();
-        (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version);
+        let mut size: usize = 0;
+        let mut key: usize = 0;
+        let mut descriptor_size: usize = 0;
+        let mut descriptor_version: u32 = 0;
+        let  map: *const MemoryDescriptor = core::ptr::null_mut();
+        (self.get_memory_map)(&mut size, map, &mut key, &mut descriptor_size, &mut descriptor_version);
         for _ in 0..10 {
-            if map != core::ptr::null() {
-                if (self.free_pool)(map as *const core::ffi::c_void).is_err() {
-                    return Err(Status::Aborted);
-                }
-            }
-            if (self.allocate_pool)(MemoryType::LoaderData, size, &map as *const *const _ as *const *const core::ffi::c_void).is_err() {
+            if !map.is_null() && !(self.free_pool)(map as *const core::ffi::c_void).is_ok() {
                 return Err(Status::Aborted);
             }
-            if (self.get_memory_map)(&size, map, &key, &descriptor_size, &descriptor_version).is_ok() {
+            if (self.allocate_pool)(MemoryType::LoaderData, size, &map as *const *const MemoryDescriptor as *const *const core::ffi::c_void).is_err() {
+                return Err(Status::Aborted);
+            }
+            if (self.get_memory_map)(&mut size, map, &mut key, &mut descriptor_size, &mut descriptor_version).is_ok() && !map.is_null(){
                 return Ok(MemoryMapInfo { address: map as u64, size, key, descriptor_size, descriptor_version });
             }
         }

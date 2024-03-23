@@ -3,7 +3,7 @@ use crate::protocols::{
     data_types::Status, loaded_image, media_access::{file, simple_file_system}, system_services::boot_time
 };
 
-pub fn get_root(handle: *const core::ffi::c_void, boot_time_services: &boot_time::Services) -> Result<&file::Protocol, Status> {
+pub fn get_root<'a>(handle: *const core::ffi::c_void, boot_time_services: &boot_time::Services) -> Result<&'a file::Protocol, Status> {
     //-getting the loaded image protocol to get the device handle
     let loaded_image: *const loaded_image::Protocol = core::ptr::null();
     if (boot_time_services.handle_protocol)(handle, &loaded_image::GUID, core::ptr::addr_of!(loaded_image) as *const *const core::ffi::c_void).is_err() {
@@ -62,9 +62,11 @@ impl file::Protocol {
 
     fn read_file(&self) -> Result<std_alloc::vec::Vec<u8>, Status> {
         let mut file_info_size: usize = 0;
-        if (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, core::ptr::null()) != Status::BufferTooSmall {
+        let status: Status = (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, core::ptr::null());
+        if status != Status::BufferTooSmall && status.is_err(){
             return Err(Status::BadBufferSize);
         }
+
         let file_info: *const file::Info = core::ptr::null();
         if (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, file_info as *const core::ffi::c_void).is_err() {
             return Err(Status::Aborted);

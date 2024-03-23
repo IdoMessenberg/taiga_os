@@ -4,7 +4,7 @@ use crate::protocols::{console_support::graphics_output, data_types::Status, sys
 pub fn init(system_table: &system::Table, package_name: &str, package_authors: &str, package_version: &str) -> Status {
     //let gop: &graphics_output::Protocol = if let Ok(gop) = system_table.boot_time_services.get_graphics_output_protocol() { gop } else { return system_table.con_out.println_status("Graphics - Graphics Output Protocol Is Not Found!", Status::NotFound) };
     if (system_table.con_out.reset)(system_table.con_out, true).is_err()
-    /*|| gop.set_mode_to_hd().is_err()*/
+    //| gop.set_mode_to_hd().is_err()
     {
         return system_table.con_out.println_status("Graphics - Graphics Output Is Not Initialised!", Status::Aborted);
     }

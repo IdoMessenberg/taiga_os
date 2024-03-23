@@ -16,7 +16,7 @@ pub struct FontInfo {
     pub glyph_buffer_base_address: u64,
 }
 
-pub fn load_font(system_table: &efi::system::Table, file: &std_alloc::vec::Vec<u8>) -> Result<FontInfo, efi::Status> {
+pub fn load_font(system_table: &efi::system::Table, file: &[u8]) -> Result<FontInfo, efi::Status> {
     let header = unsafe { &*(file.as_ptr() as *const Psf1Header) };
     if header.magic_bytes[0] != PSF_1_MAG_0 || header.magic_bytes[1] != PSF_1_MAG_1 {
         return Err(efi::Status::Aborted);

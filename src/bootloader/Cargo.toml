@@ -1,3 +1,4 @@
+workspace = { members = ["lib/file"] }
 #*/-bootloader/cargo.toml
 [package]
 name = "taiga-os-bootloader"
@@ -16,3 +17,4 @@ strip = true
 
 [dependencies]
 uefi = { path = "lib/uefi" }
+file = { path = "lib/file" }

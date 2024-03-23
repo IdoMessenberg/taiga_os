@@ -57,7 +57,7 @@ struct Elf64PHdr {
     pub p_align:  u64,
 }
 
-pub fn load_executable(system_table: &efi::system::Table, file: &std_alloc::vec::Vec<u8>) -> Result<usize, efi::Status> {
+pub fn load_executable(system_table: &efi::system::Table, file: &[u8]) -> Result<usize, efi::Status> {
     let header = unsafe { &*(file.as_ptr() as *const Elf64Hdr) };
     if header.e_ident[EI_MAG_0 as usize] != ELF_MAG_0 || header.e_ident[EI_MAG_1 as usize] != ELF_MAG_1 || header.e_ident[EI_MAG_2 as usize] != ELF_MAG_2 || header.e_ident[EI_MAG_3 as usize] != ELF_MAG_3 {
         return Err(efi::Status::Aborted);

@@ -81,7 +81,7 @@ impl simple_text_output::Protocol<'_> {
 
     pub fn print_usize(&self, string: &str, num: &usize) -> Status {
         let mut last_char: char = '\0';
-        for (_, char) in string.chars().enumerate() {
+        for char in string.chars() {
             //-printing the number if both chars are "{}" which is like the standard rust formating
             if last_char == '{' && char == '}' {
                 if self.put_usize(num).is_err() {

@@ -37,7 +37,7 @@ impl PageFrameAllocator {
         self.lock_pages(self.page_bitmap.address as *const Bitmap as u64, self.page_bitmap.size / 4096 + 1);
         self.lock_pages(boot_info.kernel_entry_address, boot_info.kernel_file_size / 4096 + 1);
         self.lock_pages(boot_info.font.glyph_buffer_base_address, 1);
-        self.lock_pages(0x10000,  800);
+       // self.lock_pages(boot_info.graphics.frame_buffer_base_address >> 15,  1_000);
 
         for i in 0..(boot_info.mem_map_info.size / boot_info.mem_map_info.descriptor_size ) {
             let memory_map_segment_descriptor: &memory_map::Descriptor = unsafe { &*((boot_info.mem_map_info.address + i as u64 * boot_info.mem_map_info.descriptor_size as u64) as *const memory_map::Descriptor) };
