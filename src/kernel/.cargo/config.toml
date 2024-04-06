@@ -1,9 +1,6 @@
 [build]
-target = "x64_kernel_target.json"
+target = "x84_64-unknown-one"
 target-dir = "../../target"
 
 [target."x64_kernel_target.json"]
 rustflags = ["-C", "relocation-model=static", "-C", "link-args=-no-pie" ,"-C", "link-arg=-Tx64_kernel_linker.ld"]
-
-[unstable]
-build-std = ["core", "compiler_builtins"]

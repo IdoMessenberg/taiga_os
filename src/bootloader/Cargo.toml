@@ -1,4 +1,3 @@
-workspace = { members = ["lib/file"] }
 #*/-bootloader/cargo.toml
 [package]
 name = "taiga-os-bootloader"
