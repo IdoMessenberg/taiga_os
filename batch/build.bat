@@ -1,6 +1,5 @@
 @echo off
 
-cd src
 
 cd bootloader
 cargo build --release
@@ -10,7 +9,6 @@ cd kernel
 cargo build --release
 cd ../
 
-cd ../
 xcopy /y target\x86_64-unknown-uefi\release\bootx64.efi bin\efi\boot
 xcopy /y target\x64_kernel_target\release\kernel bin\
 if not EXIST bin\font.psf (
