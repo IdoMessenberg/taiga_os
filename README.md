@@ -6,7 +6,7 @@
 <img src="/resources/images/logos/logo_dark.png#gh-light-mode-only" alt="Taiga OS logo" title="logo" align="center" height="200" />
 </p>
 
-# This project is geting a major rewite an a refactor of the operating system architecture
+# This project is geting a major rewite and a refactor of the operating system architecture
 
 
 ```
