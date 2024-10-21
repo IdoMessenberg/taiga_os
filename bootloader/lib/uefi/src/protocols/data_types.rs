@@ -1,12 +1,8 @@
-//*/-bootloader/lib/uefi/src/protocols/data_types.rs
-
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=256
-///128-bit buffer containing a unique identifier value, unless otherwise specified, aligned on a 64-bit boundary
 #[repr(C)]
 pub struct Guid(pub u32, pub u16, pub u16, pub [u8; 8]);
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=2269
-///status code, type u32
 #[repr(usize)]
 #[derive(PartialEq, Clone, Copy)]
 pub enum Status {
@@ -39,7 +35,7 @@ pub enum Status {
     SecurityViolation   = 26,
     CrcError            = 27,
     EndOfMedia          = 28,
-    EndOfFile           = 31, //-This is not an error there's supposed to be a jump in the values here
+    EndOfFile           = 31, //This is not an error there's supposed to be a jump in the values here
     InvalidLanguage     = 32,
     CompromisedData     = 33,
     IpAddressConflict   = 34,
@@ -54,7 +50,6 @@ pub enum Status {
 }
 impl Status {
     pub fn is_ok(&self) -> bool { self == &Status::Success }
-    pub fn is_err(&self) -> bool { self != &Status::Success }
 }
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=241
@@ -67,9 +62,9 @@ pub enum AllocateType {
 }
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=242
-///and
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=239
-#[repr(C)]
+#[repr(u32)]
+#[derive(PartialEq, Eq)]
 pub enum MemoryType {
     ReservedMemoryType,
     LoaderCode,
@@ -93,7 +88,7 @@ pub enum MemoryType {
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=245
 #[repr(C)]
 pub struct MemoryDescriptor {
-    pub r#type:          u32,
+    pub r#type:          MemoryType,
     pub physical_start:  u64,
     pub virtual_start:   u64,
     pub number_of_pages: u64,
@@ -103,10 +98,10 @@ pub struct MemoryDescriptor {
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=560
 #[repr(C)]
 pub struct PixelBitmask {
-    red_mask:      u32,
-    green_mask:    u32,
-    blue_mask:     u32,
-    reserved_mask: u32,
+    pub red_mask:      u32,
+    pub green_mask:    u32,
+    pub blue_mask:     u32,
+    pub reserved_mask: u32,
 }
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=561
@@ -136,4 +131,20 @@ pub enum BltOperation {
     BufferToVideo,
     VideoToVideo,
     Max,
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=523
+#[repr(C)]
+pub struct InputKey {
+    pub scan_code: u16,
+    pub unicode_char: u16
+}
+
+///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=344
+#[repr(C)]
+pub enum ResetType {
+    Cold,
+    Warm,
+    Shutdown,
+    PlatformSpecific
 }

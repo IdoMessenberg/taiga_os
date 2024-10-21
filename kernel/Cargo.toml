@@ -1,23 +1,20 @@
 [package]
-name = "taiga-os-kernel"
-version = "0.0.0"
+name = "kernel"
+version = "0.1.0"
 edition = "2021"
+authors = ["Ido Messenberg"]
 
 [[bin]]
 path = "src/main.rs"
-name = "kernel"
+name = "kernelx64"
 test = false
 bench = false
-
-[lib]
-path = "src/lib.rs"
-name = "taiga"
-test = false
-bench = false
-
 
 [profile.release]
-opt-level = 3
-strip = "debuginfo"
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
 
 [dependencies]
+taiga-os-bootloader = { path = "../bootloader" }

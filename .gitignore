@@ -1,5 +1,7 @@
+# rust ignore 
 target/
-.obsidian/
-bin/
 Cargo.lock
+
+# proj ignore
 logs.log
+bin/

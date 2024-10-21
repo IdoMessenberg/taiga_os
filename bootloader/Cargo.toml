@@ -1,7 +1,6 @@
-#*/-bootloader/cargo.toml
 [package]
 name = "taiga-os-bootloader"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 authors = ["Ido Messenberg"]
 
@@ -11,9 +10,16 @@ name = "bootx64"
 test = false
 bench = false
 
+[lib]
+path = "src/lib.rs"
+name = "boot"
+
 [profile.release]
 strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
 
 [dependencies]
 uefi = { path = "lib/uefi" }
-file = { path = "lib/file" }
+efi_file_loader = { path = "lib/efi_file_loader" }

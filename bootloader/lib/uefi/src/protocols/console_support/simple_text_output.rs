@@ -1,4 +1,3 @@
-//*/-bootloader/lib/uefi/src/protocols/console_support/simple_text_output.rs
 use crate::protocols::data_types::Status;
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=524

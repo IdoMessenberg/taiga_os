@@ -1,4 +1,3 @@
-//*/-bootloader/lib/uefi/src/protocols/media_access/simple_file_system.rs
 use crate::protocols::{
     data_types::{Guid, Status}, media_access::file
 };

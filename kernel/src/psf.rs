@@ -1,25 +1,35 @@
-use crate::{data_types::Point, efi_graphics_output};
+use crate::graphics::{Functions, Status};
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct Info {
-    pub glyph_size:                u8,
-    pub glyph_buffer_base_address: u64,
+pub trait RenderChar{
+    fn put_char<T: Functions>(&self, graphics: &T , x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>;
 }
-impl Info {
-    ///# Safety
-    pub unsafe fn print_char(&self, graphics_output: &efi_graphics_output::Info, position: Point<u32>, char: char, background_colour: u32, foreground_colour: u32) {
-        let mut glyph_char_scan_line_bitmap: u8 = self.get_char_glyph_from_buffer(char, 0);
-        for y in position.y..position.y + self.glyph_size as u32 {
-            for x in position.x..position.x + 8 {
-                match glyph_char_scan_line_bitmap & 0b10000000 >> (x - position.x) != 0 {
-                    true => graphics_output.put_pixel(foreground_colour, Point { x, y }),
-                    false => graphics_output.put_pixel(background_colour, Point { x, y }),
+trait GetChar {
+    unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8;
+}
+
+impl RenderChar for boot::efl::psf::FontInfo {
+    fn put_char<T: Functions>(&self, graphics: &T, x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>{
+        let mut glyph_char_scan_line_bitmap: u8 = unsafe{self.get_char_glyph_from_buffer(char, 0)};
+        for py in *y..*y + self.char_size as u32 {
+            for px in *x..*x + 8 {
+                if glyph_char_scan_line_bitmap & 0b10000000 >> (px - x) != 0 {
+                    match unsafe{graphics.put_pixel(px, py, forground_color )} {
+                        Ok(_) => (),
+                        Err(err) => return Err(err)
+                    }
+                }
+                else {
+                    match unsafe{graphics.put_pixel(px, py, background_color)} {
+                        Ok(_) => (),
+                        Err(err) => return Err(err)
+                    }
                 }
             }
-            glyph_char_scan_line_bitmap = self.get_char_glyph_from_buffer(char, (y - position.y + 1) as u8);
+            glyph_char_scan_line_bitmap = unsafe {self.get_char_glyph_from_buffer(char, (py - y + 1) as u8)};
         }
+        Ok(())
     }
-
-    unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8 { *((self.glyph_buffer_base_address + char as u64 * self.glyph_size as u64 + position as u64) as *const u8) }
+}
+impl GetChar for boot::efl::psf::FontInfo {
+    unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8 { *((self.glyph_buffer_base_address + char as u64 * self.char_size as u64 + position as u64) as *const u8) }
 }

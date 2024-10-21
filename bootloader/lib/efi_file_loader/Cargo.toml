@@ -1,0 +1,16 @@
+[package]
+name = "efi_file_loader"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
+
+[lints.clippy]
+undocumented_unsafe_blocks = "warn"
+
+[dependencies]
+uefi = { path = "../uefi" }

@@ -1,149 +1,81 @@
-//*/-kernel/src/main.rs
 #![no_std]
 #![no_main]
 
-///-the info from the bootloader is allign in efi format so the _start function needs to be an efi function -> extern "efiapi"
-#[export_name = "_start"]
-extern "efiapi" fn get_boot_info(boot_info: taiga::boot::Info) -> ! { main(boot_info) }
+use graphics::Functions;
+use psf::RenderChar;
+
+mod psf;
+mod graphics;
+mod memory;
+mod bitmap;
+mod page_frame_allocator;
+mod virtual_memory;
+
+static mut GLOBAL_ALLOC: page_frame_allocator::PageFrameAllocator = page_frame_allocator::PageFrameAllocator::default();
+
 extern "C" {
-    pub static _KernelStart: u8;
-    pub static _KernelEnd: u8;
+    #[link_name = "__k_start_addr"]
+    static mut _k_start: u8;
+    #[link_name = "__k_end_addr"]
+    static mut _k_end: u8;
 }
-pub extern "C" fn main(boot_info: taiga::boot::Info) -> ! {
 
-    let mut con_out: taiga::console::Output = taiga::console::Output::new(&boot_info);
-    //let mut page_frame_alloc: taiga::memory_paging::PageFrameAllocator = taiga::memory_paging::PageFrameAllocator::new(&boot_info);
-    con_out.clear_screen();
-    unsafe { taiga::GLOBAL_ALLOC.initialise(&boot_info) };
+#[no_mangle]
+extern "efiapi" fn _start(boot_info: boot::Info) -> ! {main(boot_info)}
 
-    con_out.println("hello world!");
-    con_out.println(core::env!("CARGO_PKG_NAME"));
-    con_out.println("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+=-\\|/?.,><;:'\"`~");
+extern "C" fn main(boot_info: boot::Info) -> ! {
+    let mut x_pos: u32 = 0;
+    let mut y_pos: u32 = 0;
 
-    unsafe {
-        con_out.print("total memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.total_mem as usize / 1024));
-        con_out.println(" Kb");
-        con_out.print("free memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.free_mem as usize / 1024));
-        con_out.println(" kb");
-        con_out.print("used memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.used_mem as usize / 1024));
-        con_out.println(" kb");
-        con_out.print("reserved memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.resv_mem as usize / 1024));
-        con_out.println(" kb");
-        //taiga::GLOBAL_ALLOC.print_bitmap(&mut con_out);
-    }
-    con_out.print("frame buffer addr: ");
-        con_out.put_usize(&(boot_info.graphics.frame_buffer_base_address as usize));
-        con_out.print("\r\n");
+    let k_start: u64 = unsafe {core::ptr::addr_of!(_k_start)} as u64;
+    let k_end: u64 = unsafe {core::ptr::addr_of!(_k_end)} as u64;
+    unsafe { GLOBAL_ALLOC.init(&boot_info, k_start, k_end) };
 
 
-        /*
-    for i in 0..20 {
-        con_out.print("addrr: "); 
-        con_out.put_usize(&i);
-        con_out.print(" - ");
-        con_out.put_usize(&unsafe {taiga::GLOBAL_ALLOC.get_free_page(&mut con_out).expect("no  free pages") as usize});
-        con_out.print("\r\n");
-    }
-     
-*/
-    let pml4_address: u64 = unsafe { taiga::GLOBAL_ALLOC.get_free_page(&mut con_out).expect("no free pages") };
-    taiga::memory_paging::set_mem(pml4_address, 0, 0x1000);
-    let page_table_manager: taiga::page_map_indexer::PageTableManager = taiga::page_map_indexer::PageTableManager::new(pml4_address);
-    for i in (0..boot_info.mem_map_info.get_memory_size()).step_by(4096) {
-       //con_out.put_usize(&(i/ 0x1000));
-        page_table_manager.map_memory(i as u64, i as u64, &mut con_out)
-        //con_out.print(" ");
     
-    } 
-    let v = boot_info.graphics.frame_buffer_base_address;
-    let s = boot_info.graphics.frame_buffer_size + 0x1000;
-    //unsafe { taiga::GLOBAL_ALLOC.lock_pages(boot_info.graphics.frame_buffer_base_address, boot_info.graphics.frame_buffer_size as usize / 4096 + 1) };
 
-    for i in (v..(s + v)).step_by(4096) {
-        page_table_manager.map_memory(i, i, &mut con_out)
-  
-    }
-    unsafe {
-        core::arch::asm!("mov {}, cr3", in(reg)pml4_address);
+    boot_info.graphics.clear_screen(boot_info.graphics.theme.black);
+    for i in 0..unsafe {&GLOBAL_ALLOC.page_bitmap}.size {
+        put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(unsafe {&GLOBAL_ALLOC.page_bitmap}[i] as usize));
     }
 
-    con_out.println("hello from virtual mem");
-    unsafe {
-        con_out.print("total memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.total_mem as usize / 1024));
-        con_out.println(" Kb");
-        con_out.print("free memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.free_mem as usize / 1024));
-        con_out.println(" kb");
-        con_out.print("used memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.used_mem as usize / 1024));
-        con_out.println(" kb");
-        con_out.print("reserved memory: ");
-        con_out.put_usize(&(taiga::GLOBAL_ALLOC.resv_mem as usize / 1024));
-        con_out.println(" kb");
-        //taiga::GLOBAL_ALLOC.print_bitmap(&mut con_out);
-    }
     panic!()
+}
+pub fn put_usize<T: RenderChar>(font: &T, graphics: &boot::efi::graphics::Info, x: &mut u32, y: &mut u32,  forground_color: u32, background_color: u32, num: &usize) {
+    let mut i: usize = 1;
+    if i <= num / 10 {
+        for _ in 0..17 {
+            i *= 10;
+            if i > num / 10 {
+                break;
+            }
+        }
+    }
 
+    let mut temp: usize = *num;
+    for _ in 0..17 {
+        let _ = font.put_char(graphics , x, y, (b'0' + (temp / i) as u8) as char, forground_color, background_color);
+        *x += 8;
+        if *x > graphics.horizontal_resolution - 8 {
+            *x = 0;
+            *y += 18
+        }
+        temp %= i;
+        i /= 10;
+        if i == 0 {
+            break;
+        }
+    }
 }
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {
-        unsafe { core::arch::asm!("hlt") }
+        //safety: 
+        // This should be safe cause if you reached here you already fucked up
+        unsafe {
+            // And this literally does nothing (tells the CPU to halt and do nothing)
+            core::arch::asm!("hlt"); 
+        }
     }
 }
-
-/*
-
-const MEM_TYPES: [&str; 17] = [
-    "ReservedMemoryType",
-    "LoaderCode",
-    "LoaderData",
-    "BootServicesCode",
-    "BootServicesData",
-    "RuntimeServicesCode",
-    "RuntimeServicesData",
-    "ConventionalMemory",
-    "UnusableMemory",
-    "ACPIReclaimMemory",
-    "ACPIMemoryNVS",
-    "MemoryMappedIO",
-    "MemoryMappedIOPortSpace",
-    "PalCode",
-    "PersistentMemory",
-    "UnacceptedMemoryType",
-    "MaxMemoryType",
-];
-
-
-
-
-
-
-
-    let page_diractory_entry: taiga::page_map_indexer::PageDiractoryEntry =
-        taiga::page_map_indexer::PageDiractoryEntry::new(0b011111111111111111111111111111111111, taiga::page_map_indexer::PageDiractoryEntryFlags::PageSize | taiga::page_map_indexer::PageDiractoryEntryFlags::Present);
-
-    for i in (0..64).rev() {
-        con_out.put_usize(&(((page_diractory_entry.0 >> i) & 0x1) as usize))
-    }
-    con_out.print("\r\n");
-    con_out.print(if page_diractory_entry.get_flag(taiga::page_map_indexer::PageDiractoryEntryFlags::ReadWrite) { "true" } else { "false" });
-    con_out.print("\r\n");
-    con_out.put_usize(&10);
-    con_out.print("\r\n");
-
-    let page_map_indexer: taiga::page_map_indexer::PageMapIndexer = taiga::page_map_indexer::PageMapIndexer::new(0x1000 * 52 + 0x50000 * 7);
-    con_out.put_usize(&(page_map_indexer.page_index as usize));
-    con_out.print(" - ");
-    con_out.put_usize(&(page_map_indexer.page_table_index as usize));
-    con_out.print(" - ");
-    con_out.put_usize(&(page_map_indexer.page_directory_index as usize));
-    con_out.print(" - ");
-    con_out.put_usize(&(page_map_indexer.page_directory_pointer_index as usize));
- */
