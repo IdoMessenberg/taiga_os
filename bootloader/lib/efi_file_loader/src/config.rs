@@ -34,13 +34,6 @@ pub fn parse_config_toml<'b>(file: &'b[u8]) -> Result<File<'b>, efi::Status>{
             if parts.len() != 2 {
                 return Err(efi::Status::Unsupported)
             }
-            /* 
-            match tables.get_mut(current_table_name) {
-                None => return Err(efi::Status::Aborted),
-                Some(table) => {
-                    table.push((current_table_name, parse_value(parts[1])));
-                }
-            }*/
             let table = if let Some(t) = tables.get_mut(current_table_name) {t}
             else {
                 return Err(efi::Status::NotFound);
@@ -114,28 +107,7 @@ fn get_value_type(value: &str) -> TomlValue {
     }
 }
 
-/* 
-fn parse_value(value: &str) -> TomlValue {
-    if value.starts_with("0x") {
-        match usize::from_str_radix(value.trim_start_matches("0x"), 16) {
-            Ok(v) => return TomlValue::HexInteger(v),
-            Err(_) =>()
-        }
-    }
-    //match value.parse::<usize>() {
-    //    Ok(v) => return TomlValue::UnsignedInteger(v),
-    //    Err(_) => ()
-    //}
-    if value.starts_with('"') && value.ends_with('"') {
-        return TomlValue::String(&value[1..value.len()-1])
-    }
-    match value {
-        "true" => TomlValue::Boolean(true),
-        "false" => TomlValue::Boolean(false),
-        _ => TomlValue::String(value)
-    }
-}
-*/
+
 struct HashMap<K : Eq, T>(Vec<(K,T)>);
 
 impl<K: Eq, T> HashMap<K, T> {

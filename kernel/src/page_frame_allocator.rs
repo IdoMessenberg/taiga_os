@@ -12,7 +12,7 @@ pub struct PageFrameAllocator {
 
 //todo: impl err handeling
 impl PageFrameAllocator {
-    pub const fn  default() -> Self {
+    pub const fn const_default() -> Self {
         Self {
             total_mem: 0,
             free_mem: 0, 
@@ -61,17 +61,15 @@ impl PageFrameAllocator {
     where T : Fn(&mut Self, usize) -> bool,
     {
         for i in 0..pages {
-            if !action(self, start_addr + i * boot::PAGE_SIZE) {
-                return false;
-            }
+            action(self, start_addr + i * boot::PAGE_SIZE);
         }
         true
     }
     
     pub fn get_free_page(&mut self) -> Option<u64> {
         for i in self.first_free_page_index..self.page_bitmap.size * 8 {
-            self.first_free_page_index = i;
             if !self.page_bitmap[i] {
+                self.first_free_page_index = i;
                 self.lock_page(i * boot::PAGE_SIZE);
                 return Some((i* boot::PAGE_SIZE) as u64)
             }

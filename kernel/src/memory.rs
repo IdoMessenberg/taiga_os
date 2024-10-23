@@ -6,7 +6,7 @@ pub trait GetPages {
 
 impl GetPages for boot::efi::alloc::MemoryMapInfo {
     fn get_available_memory_bytes(&self) -> usize {
-        self.get_pages()* boot::PAGE_SIZE
+        self.get_pages() * boot::PAGE_SIZE
     }
     fn get_pages(&self) -> usize{
         let mut pages: usize = 0;

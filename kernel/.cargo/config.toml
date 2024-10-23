@@ -3,4 +3,8 @@ target = "x86_64-unknown-none"
 target-dir = "../target"
 
 [target.x86_64-unknown-none]
-rustflags = ["-C", "relocation-model=static", "-C", "link-args=-no-pie", "-C", "link-args=-T linker_script.ld" ]
+rustflags = [
+        "-C", "relocation-model=static",
+        "-C", "link-args=-no-pie",
+        "-C", "link-args=-T linker_script.ld",
+    ]

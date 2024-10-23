@@ -19,7 +19,7 @@ extern "C" fn main(handle: *const core::ffi::c_void, system_table: efi::system::
     let system_root: &efi::protocols::media_access::file::Protocol  = get_system_root(handle, &system_table);
     let gop: &efi::protocols::console_support::graphics_output::Protocol<'_> = if  let Ok(g) = system_table.boot_time_services.get_graphics_output_protocol(){g} 
         else {error(&system_table, "Err - graphics", "graphical output protocol is not found!")};
-    gop.set_mode_to_resulotion(1920, 1080);
+    //gop.set_mode_to_resulotion(1920, 1080);
 
     let config_file: Vec<u8> = match system_root.load_file(CONFIG_FILE_PATH) {
         Ok(toml) => toml,

@@ -1,14 +1,16 @@
-use crate::graphics::{Functions, Status};
+use crate::graphics::{PutPixel, Status};
 
-pub trait RenderChar{
-    fn put_char<T: Functions>(&self, graphics: &T , x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>;
-}
-trait GetChar {
+///# Safety
+/// todo:
+unsafe trait GetChar {
     unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8;
+}
+pub trait RenderChar{
+    fn put_char<T: PutPixel>(&self, graphics: &T , x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>;
 }
 
 impl RenderChar for boot::efl::psf::FontInfo {
-    fn put_char<T: Functions>(&self, graphics: &T, x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>{
+    fn put_char<T: PutPixel>(&self, graphics: &T, x: &u32, y: &u32, char: char, forground_color: u32, background_color: u32) -> Result<(), Status>{
         let mut glyph_char_scan_line_bitmap: u8 = unsafe{self.get_char_glyph_from_buffer(char, 0)};
         for py in *y..*y + self.char_size as u32 {
             for px in *x..*x + 8 {
@@ -30,6 +32,6 @@ impl RenderChar for boot::efl::psf::FontInfo {
         Ok(())
     }
 }
-impl GetChar for boot::efl::psf::FontInfo {
+unsafe impl GetChar for boot::efl::psf::FontInfo {
     unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8 { *((self.glyph_buffer_base_address + char as u64 * self.char_size as u64 + position as u64) as *const u8) }
 }

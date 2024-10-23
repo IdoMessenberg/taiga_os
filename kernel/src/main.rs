@@ -2,7 +2,9 @@
 #![no_main]
 
 use graphics::Functions;
+use memory::GetPages;
 use psf::RenderChar;
+use virtual_memory::*;
 
 mod psf;
 mod graphics;
@@ -11,7 +13,7 @@ mod bitmap;
 mod page_frame_allocator;
 mod virtual_memory;
 
-static mut GLOBAL_ALLOC: page_frame_allocator::PageFrameAllocator = page_frame_allocator::PageFrameAllocator::default();
+static mut GLOBAL_ALLOC: page_frame_allocator::PageFrameAllocator = page_frame_allocator::PageFrameAllocator::const_default();
 
 extern "C" {
     #[link_name = "__k_start_addr"]
@@ -30,17 +32,37 @@ extern "C" fn main(boot_info: boot::Info) -> ! {
     let k_start: u64 = unsafe {core::ptr::addr_of!(_k_start)} as u64;
     let k_end: u64 = unsafe {core::ptr::addr_of!(_k_end)} as u64;
     unsafe { GLOBAL_ALLOC.init(&boot_info, k_start, k_end) };
-
-
+        
+    let pml4: *mut PageTable = unsafe { GLOBAL_ALLOC.get_free_page().unwrap()} as *mut PageTable; 
+    unsafe {
+        core::ptr::write_bytes(pml4, 0, boot::PAGE_SIZE);
+    }
     
+    let ptm = PageTableManager{pml4};
+    
+    for i in (0..boot_info.memory_map_info.get_available_memory_bytes() as u64).step_by(boot::PAGE_SIZE) {
+        ptm.map_memory(i, i);
+    }
+    for i in (boot_info.graphics.frame_buffer_base_address..(boot_info.graphics.frame_buffer_base_address + boot_info.graphics.frame_buffer_size as u64)).step_by(boot::PAGE_SIZE) {
+        ptm.map_memory(i, i);
+    }
+    unsafe{
+        core::arch::
+        asm!("mov {x} , cr3", 
+              x  = in(reg) pml4);
+    }
 
     boot_info.graphics.clear_screen(boot_info.graphics.theme.black);
-    for i in 0..unsafe {&GLOBAL_ALLOC.page_bitmap}.size {
-        put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(unsafe {&GLOBAL_ALLOC.page_bitmap}[i] as usize));
-    }
+    //put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(1000));
+
+    ptm.map_memory(0x80000, 0x60000000);
+    let test :*mut usize = 0x60000000 as *mut usize;
+    unsafe{*test = 4837589437589};
+    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(unsafe{*test}));
 
     panic!()
 }
+
 pub fn put_usize<T: RenderChar>(font: &T, graphics: &boot::efi::graphics::Info, x: &mut u32, y: &mut u32,  forground_color: u32, background_color: u32, num: &usize) {
     let mut i: usize = 1;
     if i <= num / 10 {

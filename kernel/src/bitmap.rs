@@ -12,7 +12,7 @@ impl Bitmap {
     }
 
     pub fn set(&self, index: usize, value: bool) -> bool {
-        if index > self.size {
+        if index >= self.size {
             return false;
         }
         if value {
