@@ -7,7 +7,7 @@ use std_alloc::vec::Vec;
 use uefi as efi;
 use efi_file_loader as efl;
 
-const CONFIG_FILE_PATH: *const u16= [b'c' as u16, b'o' as u16, b'n' as u16, b'f' as u16, b'.' as u16, b't' as u16, b'o' as u16, b'm' as u16, b'l' as u16, 0].as_ptr();
+const CONFIG_FILE_PATH: *const u16 = [b'c' as u16, b'o' as u16, b'n' as u16, b'f' as u16, b'.' as u16, b't' as u16, b'o' as u16, b'm' as u16, b'l' as u16, 0].as_ptr();
 
 type KernelEntry = extern "efiapi" fn(boot::Info) -> !;
 
@@ -21,7 +21,7 @@ extern "C" fn main(handle: *const core::ffi::c_void, system_table: efi::system::
         else {error(&system_table, "Err - graphics", "graphical output protocol is not found!")};
     //gop.set_mode_to_resulotion(1920, 1080);
 
-    let config_file: Vec<u8> = match system_root.load_file(CONFIG_FILE_PATH) {
+    let config_file: Vec<u8> = match system_root.load_file(system_table.boot_time_services, CONFIG_FILE_PATH) {
         Ok(toml) => toml,
         Err(_) => error(&system_table, "Err - fs", "config file is not found! - wrong path / not there")
     };
@@ -75,7 +75,7 @@ fn get_system_root<'a>(handle: *const core::ffi::c_void, system_table: &'a efi::
 }
 
 fn get_kernel_entry_point_addr(system_table: &efi::system::Table, system_root: &efi::protocols::media_access::file::Protocol, config: &efl::config::File) -> usize {
-    let kernel_file = match system_root.load_file(efi::str_to_ucs2(config.loader_paths.kernel_path).as_ptr()) {
+    let kernel_file = match system_root.load_file(system_table.boot_time_services, efi::str_to_ucs2(config.loader_paths.kernel_path).as_ptr()) {
         Ok(elf) =>  elf,
         Err(_) => error(system_table, "Err - fs", "kernel file is not found! - wrong path / not there")
     };
@@ -86,7 +86,7 @@ fn get_kernel_entry_point_addr(system_table: &efi::system::Table, system_root: &
 }
 
 fn get_psf_font_info(system_table: &efi::system::Table, system_root: &efi::protocols::media_access::file::Protocol, config: &efl::config::File) -> efl::psf::FontInfo {
-    let font_file = match system_root.load_file(efi::str_to_ucs2(config.loader_paths.font_path).as_ptr()) {
+    let font_file = match system_root.load_file(system_table.boot_time_services, efi::str_to_ucs2(config.loader_paths.font_path).as_ptr()) {
         Ok(psf) =>  psf,
         Err(_) => error(system_table, "Err - fs", "font file is not found! - wrong path / not there")
     };

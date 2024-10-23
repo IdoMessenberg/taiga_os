@@ -67,7 +67,7 @@ impl PageFrameAllocator {
     }
     
     pub fn get_free_page(&mut self) -> Option<u64> {
-        for i in self.first_free_page_index..self.page_bitmap.size * 8 {
+        for i in self.first_free_page_index..self.page_bitmap.size {
             if !self.page_bitmap[i] {
                 self.first_free_page_index = i;
                 self.lock_page(i * boot::PAGE_SIZE);

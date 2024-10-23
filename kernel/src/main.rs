@@ -29,8 +29,8 @@ extern "C" fn main(boot_info: boot::Info) -> ! {
     let mut x_pos: u32 = 0;
     let mut y_pos: u32 = 0;
 
-    let k_start: u64 = unsafe {core::ptr::addr_of!(_k_start)} as u64;
-    let k_end: u64 = unsafe {core::ptr::addr_of!(_k_end)} as u64;
+    let k_start: u64 = core::ptr::addr_of!(_k_start) as u64;
+    let k_end: u64 = core::ptr::addr_of!(_k_end) as u64;
     unsafe { GLOBAL_ALLOC.init(&boot_info, k_start, k_end) };
         
     let pml4: *mut PageTable = unsafe { GLOBAL_ALLOC.get_free_page().unwrap()} as *mut PageTable; 

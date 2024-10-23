@@ -28,7 +28,7 @@ impl Bitmap {
 impl core::ops::Index<usize> for Bitmap {
     type Output = bool;
     fn index(&self, index: usize) -> &Self::Output {
-        let ptr = (self.addr + index as u64 / 8) as *const u8;
+        let ptr: *const u8 = (self.addr + index as u64 / 8) as *const u8;
         match unsafe{*ptr} & 0b10000000 >> (index % 8) {
             0 => &false,
             _ => &true

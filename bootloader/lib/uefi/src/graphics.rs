@@ -42,6 +42,7 @@ impl boot_time::Services {
         if gop.is_null() {
             return  Err(Status::NotFound)
         }
+        //todo:
         //safety:
         //
         unsafe { Ok(&*gop) }

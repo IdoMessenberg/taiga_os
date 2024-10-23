@@ -50,9 +50,9 @@ pub fn get_root<'a>(handle: *const core::ffi::c_void, boot_time_services: &boot_
 }
 
 impl file::Protocol {
-    pub fn load_file(&self, file_name: *const u16) -> Result<std_alloc::vec::Vec<u8>, Status> {
+    pub fn load_file(&self, boot_time_services: &boot_time::Services, file_name: *const u16) -> Result<std_alloc::vec::Vec<u8>, Status> {
         let file_handle: &file::Protocol = if let Ok(new_file_handle) = self.open_file(file_name) { new_file_handle } else { return Err(Status::Aborted) };
-        let data = if let Ok(data) = file_handle.read_file() { data } else { return Err(Status::Aborted) };
+        let data: std_alloc::vec::Vec<u8> = if let Ok(data) = file_handle.read_file(boot_time_services) { data } else { return Err(Status::Aborted) };
         self.close_file(file_handle);
         Ok(data)
     }
@@ -69,14 +69,11 @@ impl file::Protocol {
         unsafe { Ok(&*file_handle) }
     }
 
-    fn read_file(&self) -> Result<std_alloc::vec::Vec<u8>, Status> {
+    fn read_file(&self, boot_time_services: &boot_time::Services) -> Result<std_alloc::vec::Vec<u8>, Status> {
         let mut file_info_size: usize = 0;
-        let status: Status = (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, null());
-        if status != Status::BufferTooSmall && !status.is_ok(){
-            return Err(Status::BadBufferSize);
-        }
-
         let file_info: *const file::Info = null();
+        (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, null());
+        boot_time_services.alloc_pool(file_info_size, addr_of!(file_info) as *const*const core::ffi::c_void);
         if !(self.get_info)(self, &file::INFO_GUID, &mut file_info_size, file_info as *const core::ffi::c_void).is_ok() {
             return Err(Status::Aborted);
         }

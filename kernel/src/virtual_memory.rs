@@ -27,15 +27,15 @@ impl PageDiractoryEntry {
 pub enum Flags {
     Present = 0,
     ReadWrite = 1,
-    UserSupervisor = 2,
-    WriteThrough = 3,
-    CacheDisable = 4,
-    Accessed = 5,
-    PageSize = 7,
-    Available0 = 9,
-    Available1 = 10,
-    Available2 = 11,
-    ExecuteDisable = 63
+    //UserSupervisor = 2,
+    //WriteThrough = 3,
+    //CacheDisable = 4,
+    //Accessed = 5,
+    //PageSize = 7,
+    //Available0 = 9,
+    //Available1 = 10,
+    //Available2 = 11,
+    //ExecuteDisable = 63
 }
 
 #[repr(C, align(0x1000))]
