@@ -51,7 +51,7 @@ impl PageFrameAllocator {
 
         for i in 0..boot_info.memory_map_info.size/boot_info.memory_map_info.descriptor_size {
             let desc: &MemoryDescriptor = unsafe {&*((boot_info.memory_map_info.address + boot_info.memory_map_info.descriptor_size as u64 * i as u64) as *const MemoryDescriptor)};
-            if desc.r#type != boot::efi::protocols::data_types::MemoryType::ConventionalMemory {
+            if desc.r#type != boot::efi::protocols::data_types::MemoryType::ConventionalMemory && desc.r#type != boot::efi::protocols::data_types::MemoryType::LoaderData {
                 let _ = self.iter_action(Self::reserve_page, desc.physical_start as usize, desc.number_of_pages as usize);
             }
         };

@@ -15,6 +15,7 @@ strip = true
 opt-level = "s"
 lto = true
 codegen-units = 1
+panic = "abort"
 
 [dependencies]
 taiga-os-bootloader = { path = "../bootloader" }

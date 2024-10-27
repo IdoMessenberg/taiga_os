@@ -73,7 +73,7 @@ impl file::Protocol {
         let mut file_info_size: usize = 0;
         let file_info: *const file::Info = null();
         (self.get_info)(self, &file::INFO_GUID, &mut file_info_size, null());
-        boot_time_services.alloc_pool(file_info_size, addr_of!(file_info) as *const*const core::ffi::c_void);
+        boot_time_services.alloc_pool(file_info_size, addr_of!(file_info) as *const *const core::ffi::c_void);
         if !(self.get_info)(self, &file::INFO_GUID, &mut file_info_size, file_info as *const core::ffi::c_void).is_ok() {
             return Err(Status::Aborted);
         }
@@ -81,8 +81,7 @@ impl file::Protocol {
         //safety:
         //this is getting the file_size and should be safe as i checked that the get info is not an error before
         //and the unsafe is needed to derefrance the file size so it could be used
-        let file_size: usize = unsafe { (*file_info).file_size } as usize;
-
+        let file_size: usize = unsafe { (*file_info).file_size.clone() } as usize;
         let data: std_alloc::vec::Vec<u8> = std_alloc::vec![0; file_size];
         if !(self.read)(self, &file_size, data.as_ptr() as *const core::ffi::c_void).is_ok() {
             return Err(Status::LoadError);

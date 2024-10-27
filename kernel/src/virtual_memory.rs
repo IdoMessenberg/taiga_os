@@ -50,15 +50,15 @@ pub struct PageMapIndexer {
 }
 impl PageMapIndexer {
     pub fn new(virtual_addr: u64) -> Self {
-        let mut  vr: usize = virtual_addr as usize;
+        let mut  vr = virtual_addr;
         vr >>= 12;
-        let p_i: usize = vr & 0x1ff;
+        let p_i: usize = (vr & 0x1ff) as usize;
         vr >>= 9;
-        let pt_i: usize = vr & 0x1ff;
+        let pt_i: usize = (vr & 0x1ff) as usize;
         vr >>= 9;
-        let pd_i: usize = vr & 0x1ff;
+        let pd_i: usize = (vr & 0x1ff) as usize;
         vr >>= 9;
-        let pdp_i: usize= vr & 0x1ff;
+        let pdp_i: usize= (vr & 0x1ff) as usize;
         PageMapIndexer { pdp_i, pd_i, pt_i, p_i }
     }
 }
