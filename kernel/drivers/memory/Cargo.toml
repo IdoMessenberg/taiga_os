@@ -1,0 +1,14 @@
+[package]
+name = "memory_driver"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
+
+[dependencies]
+page_frame_allocator = { path = "../../lib/page_frame_allocator" }
+util = { path = "../../lib/util" }

@@ -1,5 +1,5 @@
 [package]
-name = "taiga-os-bootloader"
+name = "bootloader"
 version = "0.1.0"
 edition = "2021"
 authors = ["Ido Messenberg"]
@@ -10,10 +10,6 @@ name = "bootx64"
 test = false
 bench = false
 
-[lib]
-path = "src/lib.rs"
-name = "boot"
-
 [profile.release]
 strip = true
 opt-level = "s"
@@ -23,3 +19,5 @@ codegen-units = 1
 [dependencies]
 uefi = { path = "lib/uefi" }
 efi_file_loader = { path = "lib/efi_file_loader" }
+efi_functions = { path = "lib/efi_functions" }
+psf = {path = "../kernel/lib/fonts/psf"}

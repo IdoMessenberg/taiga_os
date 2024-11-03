@@ -2,7 +2,7 @@ use std_alloc::vec::Vec;
 
 #[derive(Default, Clone)]
 pub struct File<'a>{
-    pub graphics_theme: efi::graphics::Theme,
+    pub graphics_theme: efi::ColourTheme,
     pub loader_paths: LoaderPaths<'a>
 }
 

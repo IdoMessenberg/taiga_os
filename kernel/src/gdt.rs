@@ -25,6 +25,23 @@ pub struct Gdt {
     user_data: GdtEntry
 }
 impl Gdt {
+    //needed for some reason
+    const fn empty() -> Self {
+        Gdt { 
+            null: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+            kernel_code: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+            kernel_data: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+            user_null: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+            user_code: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+            user_data: 
+                GdtEntry { limit_0: 0, base_0: 0, base_1: 0, access_byte: 0x00, limit_1_flags: 0x00, base_2: 0 }, 
+        }
+    }
     pub const fn const_default() -> Self {
         Gdt { 
             null: 
@@ -43,7 +60,13 @@ impl Gdt {
     } 
 }
 
-pub unsafe fn load_gdt(gdt_descriptor_ptr: *const GdtDiscriptor) {
+pub static mut GDT: Gdt = Gdt::empty();
+
+
+pub unsafe fn load_gdt(gdt: Gdt) {
+    GDT = gdt;
+    let gdt_desc: GdtDiscriptor = GdtDiscriptor{size: core::mem::size_of::<Gdt>() as u16 - 1, offset: core::ptr::addr_of!(GDT) as u64};
+
     core::arch::asm!(
         "lgdt [{r}]",
         "mov ax, 0x10",
@@ -56,6 +79,6 @@ pub unsafe fn load_gdt(gdt_descriptor_ptr: *const GdtDiscriptor) {
         "mov rax, 0x08",
         "push rax",
         "push {r}",
-        r = in(reg) gdt_descriptor_ptr
+        r = in(reg) core::ptr::addr_of!(gdt_desc)
     )
 }

@@ -15,7 +15,14 @@ strip = true
 opt-level = "s"
 lto = true
 codegen-units = 1
-panic = "abort"
+#panic = "unwind"
 
 [dependencies]
-taiga-os-bootloader = { path = "../bootloader" }
+util = { path = "lib/util" }
+uefi = { path = "../bootloader/lib/uefi"}
+psf = { path = "lib/fonts/psf" }
+memory_driver = { path = "drivers/memory" }
+graphics_deriver = { path = "drivers/graphics" }
+#efi_file_loader ={ path = "../bootloader/lib/efi_file_loader"}
+
+#taiga-os-bootloader = { path = "../bootloader" }

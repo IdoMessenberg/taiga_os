@@ -8,3 +8,6 @@ rustflags = [
         "-C", "link-args=-no-pie",
         "-C", "link-args=-T linker_script.ld",
     ]
+
+[unstable]
+build-std = ["core"]

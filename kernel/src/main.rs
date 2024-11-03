@@ -1,22 +1,18 @@
 #![no_std]
 #![no_main]
+#![feature(abi_x86_interrupt)]
+#![allow(static_mut_refs)]
 
-use graphics::Functions;
-use memory::GetPages;
-use psf::RenderChar;
-use virtual_memory::*;
+extern crate uefi as efi;
+extern crate psf as psfont;
+extern  crate memory_driver;
 use gdt::*;
+use graphics_deriver::{Functions, PsfFontFunctions, PutPixel};
 
-mod psf;
-mod graphics;
-mod memory;
-mod bitmap;
-mod page_frame_allocator;
-mod virtual_memory;
 mod gdt;
 mod idt;
 
-static mut GLOBAL_ALLOC: page_frame_allocator::PageFrameAllocator = page_frame_allocator::PageFrameAllocator::const_default();
+pub const PAGE_SIZE: usize = 4096;
 
 extern "C" {
     #[link_name = "__k_start_addr"]
@@ -26,69 +22,74 @@ extern "C" {
 }
 
 #[no_mangle]
-extern "efiapi" fn _start(boot_info: boot::Info) -> ! {main(boot_info)}
+extern "efiapi" fn _start(boot_info: util::BootInfo) -> ! {main(boot_info)}
 
-extern "C" fn main(boot_info: boot::Info) -> ! {
-    let mut x_pos: u32 = 0;
-    let mut y_pos: u32 = 0;
-
+extern "C" fn main(boot_info: util::BootInfo) -> ! {
     let k_start: u64 = core::ptr::addr_of!(_k_start) as u64;
     let k_end: u64 = core::ptr::addr_of!(_k_end) as u64;
-    let gdt = Gdt::const_default();
-    let gdt_desc = GdtDiscriptor{size: core::mem::size_of::<Gdt>() as u16 - 1, offset: core::ptr::addr_of!(gdt) as u64};
-    unsafe {load_gdt(core::ptr::addr_of!(gdt_desc))};
-
-    unsafe { GLOBAL_ALLOC.init(&boot_info, k_start, k_end) };
-        
-    let pml4: *mut PageTable = unsafe { GLOBAL_ALLOC.get_free_page().unwrap()} as *mut PageTable; 
+    
     unsafe {
-        core::ptr::write_bytes(pml4, 0, boot::PAGE_SIZE);
-    }
-    
-    let ptm = PageTableManager{pml4};
-    
-    for i in (0..boot_info.memory_map_info.get_available_memory_bytes() as u64).step_by(boot::PAGE_SIZE) {
-        ptm.map_memory(i, i);
-    }
-    for i in (boot_info.graphics.frame_buffer_base_address..(boot_info.graphics.frame_buffer_base_address + boot_info.graphics.frame_buffer_size as u64)).step_by(boot::PAGE_SIZE) {
-        ptm.map_memory(i, i);
-    }
-    
-    unsafe{
-        core::arch::
-        asm!(
-            "mov {x} , cr3", 
-            x  = in(reg) pml4
+        graphics_deriver::GLOBAL_FRAME_BUFFER = graphics_deriver::FrameBuffer::const_init(
+            boot_info.graphics.frame_buffer_base_address,
+            boot_info.graphics.pixels_per_scan_line,
+            boot_info.graphics.horizontal_resolution,
+            boot_info.graphics.vertical_resolution
         );
+        load_gdt(Gdt::const_default());
+        memory_driver::page_frame_allocator::GLOBAL_ALLOC.init(&boot_info, k_start, k_end);
+        memory_driver::virtual_memory::init(&boot_info);
+        idt::load_idt();
     }
+    unsafe {
+        graphics_deriver::GLOBAL_FRAME_BUFFER.put_pixel(0,0,&graphics_deriver::Colour::from_hex(boot_info.graphics.theme.black));
+        graphics_deriver::GLOBAL_FRAME_BUFFER.clear_screen(&graphics_deriver::Colour::from_hex(boot_info.graphics.theme.black));
 
-    boot_info.graphics.clear_screen(boot_info.graphics.theme.black);
+    }
     
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(1));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.red, boot_info.graphics.theme.black, &(2));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.green, boot_info.graphics.theme.black, &(3));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.blue, boot_info.graphics.theme.black, &(4));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.yellow, boot_info.graphics.theme.black, &(5));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.orange, boot_info.graphics.theme.black, &(6));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.purple, boot_info.graphics.theme.black, &(7));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.gray, boot_info.graphics.theme.black, &(8));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.dark_gray, boot_info.graphics.theme.black, &(9));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_red, boot_info.graphics.theme.black, &(10));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_green, boot_info.graphics.theme.black, &(11));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_blue, boot_info.graphics.theme.black, &(12));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_yellow, boot_info.graphics.theme.black, &(13));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_orange, boot_info.graphics.theme.black, &(14));
-    put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_purple, boot_info.graphics.theme.black, &(15));
-    
+    let mut x_pos: u32 = 0;
+    let mut y_pos: u32 = 300;
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(1));
+    put_usize(&boot_info.font,  &mut x_pos, &mut y_pos, boot_info.graphics.theme.red, boot_info.graphics.theme.black, &(2));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.green, boot_info.graphics.theme.black, &(3));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.blue, boot_info.graphics.theme.black, &(4));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.yellow, boot_info.graphics.theme.black, &(5));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.orange, boot_info.graphics.theme.black, &(6));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.purple, boot_info.graphics.theme.black, &(7));
+    put_usize(&boot_info.font,  &mut x_pos, &mut y_pos, boot_info.graphics.theme.gray, boot_info.graphics.theme.black, &(8));
+    put_usize(&boot_info.font,  &mut x_pos, &mut y_pos, boot_info.graphics.theme.dark_gray, boot_info.graphics.theme.black, &(9));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_red, boot_info.graphics.theme.black, &(10));
+    put_usize(&boot_info.font,  &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_green, boot_info.graphics.theme.black, &(11));
+    put_usize(&boot_info.font,  &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_blue, boot_info.graphics.theme.black, &(12));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_yellow, boot_info.graphics.theme.black, &(13));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_orange, boot_info.graphics.theme.black, &(14));
+    put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_purple, boot_info.graphics.theme.black, &(15));
+    let mut  c : graphics_deriver::Colour = graphics_deriver::Colour::from_hex(boot_info.graphics.theme.orange);
+    c.alpha =50;
+    let mut c2 = graphics_deriver::Colour::from_hex(boot_info.graphics.theme.blue);
+    c2.alpha = 80;
 
-    //ptm.map_memory(0x80000, 0x60000000);
-    //let test :*mut usize = 0x60000000 as *mut usize;
-    //unsafe{*test = 4837589437589};
-    //put_usize(&boot_info.font, &boot_info.graphics, &mut x_pos, &mut y_pos, boot_info.graphics.theme.white, boot_info.graphics.theme.black, &(unsafe{*test}));
+    y_pos = 316;
+    x_pos = 0;
+    unsafe {
+        //core::arch::asm!("int 0xe");
+        graphics_deriver::GLOBAL_FRAME_BUFFER.put_char(&boot_info.font, 100, 80, 'A', &graphics_deriver::Colour::from_hex(boot_info.graphics.theme.light_blue), &graphics_deriver::Colour::from_hex(boot_info.graphics.theme.black));
+        graphics_deriver::GLOBAL_FRAME_BUFFER.clear_screen_with_alpha_correction(&c2);
+        graphics_deriver::GLOBAL_FRAME_BUFFER.clear_screen_with_alpha_correction(&c);
+
+    }
+    unsafe {
+        
+        memory_driver::virtual_memory::PTM.map_memory(0x80000, 0x60000000);
+    }
+        let test :*mut usize = 0x60000000 as *mut usize;
+    unsafe{
+        *test = 4837589437589;
+        put_usize(&boot_info.font, &mut x_pos, &mut y_pos, boot_info.graphics.theme.light_purple, boot_info.graphics.theme.black, &(*test));
+    };
     panic!()
 }
 
-pub fn put_usize<T: RenderChar>(font: &T, graphics: &boot::efi::graphics::Info, x: &mut u32, y: &mut u32,  forground_color: u32, background_color: u32, num: &usize) {
+pub fn put_usize(font: &psf::FontInfo, x: &mut u32, y: &mut u32,  forground_color: u32, background_color: u32, num: &usize) {
     let mut i: usize = 1;
     if i <= num / 10 {
         for _ in 0..17 {
@@ -101,9 +102,13 @@ pub fn put_usize<T: RenderChar>(font: &T, graphics: &boot::efi::graphics::Info, 
 
     let mut temp: usize = *num;
     for _ in 0..17 {
-        let _ = font.put_char(graphics , x, y, (b'0' + (temp / i) as u8) as char, forground_color, background_color);
+        unsafe {
+            graphics_deriver::GLOBAL_FRAME_BUFFER.put_char(font , *x, *y, (b'0' + (temp / i) as u8) as char, &graphics_deriver::Colour::from_hex(forground_color), &graphics_deriver::Colour::from_hex(background_color))
+        };
         *x += 8;
-        if *x > graphics.horizontal_resolution - 8 {
+        if *x > unsafe {
+            graphics_deriver::GLOBAL_FRAME_BUFFER.horizontal_resolution - 8  
+        }  {
             *x = 0;
             *y += 18
         }

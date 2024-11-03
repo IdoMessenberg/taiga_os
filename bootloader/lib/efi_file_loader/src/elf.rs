@@ -1,3 +1,4 @@
+use efif::BootTimeAllocFunctions;
 //https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h
 const EI_NIDENT: u8 = 16;
 

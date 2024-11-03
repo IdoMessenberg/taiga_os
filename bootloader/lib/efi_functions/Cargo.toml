@@ -1,7 +1,8 @@
 [package]
-name = "efi_file_loader"
+name = "efi_functions"
 version = "0.1.0"
 edition = "2021"
+
 authors = ["Ido Messenberg"]
 
 [profile.release]
@@ -15,5 +16,3 @@ undocumented_unsafe_blocks = "warn"
 
 [dependencies]
 uefi = { path = "../uefi" }
-efi_functions = { path = "../efi_functions" }
-psf = { path = "../../../kernel/lib/fonts/psf" }
