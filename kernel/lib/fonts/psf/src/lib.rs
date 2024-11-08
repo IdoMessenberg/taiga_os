@@ -12,10 +12,15 @@ pub struct Header {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]  
 pub struct FontInfo {
     pub char_size:                 u8,
     pub glyph_buffer_base_address: u64,
 }
 impl FontInfo {
+    pub const CHAR_WIDTH: u8 = 8;
+    pub const fn const_default() -> Self {
+        Self { char_size: 0, glyph_buffer_base_address: 0 }
+    }
     pub unsafe fn get_char_glyph_from_buffer(&self, char: char, position: u8) -> u8 { *((self.glyph_buffer_base_address + char as u64 * self.char_size as u64 + position as u64) as *const u8) }
 }

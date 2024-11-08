@@ -8,6 +8,14 @@ pub struct Colour {
     pub alpha: u8
 }
 impl Colour {
+    pub const fn const_default() -> Self {
+        Self{
+            red: 0xff,
+            green: 0xff,
+            blue: 0xff,
+            alpha: 0xff,
+        }
+    }
     pub fn from_rgb(red: u8, green: u8, blue: u8) -> Self {
         Self{
             red,
@@ -28,7 +36,7 @@ impl Colour {
         (self.alpha as u32) << 24 | (self.red as u32) << 16 | (self.green as u32) << 8 | (self.blue as u32)
     }
 
-    pub fn from_hex(hex: u32) -> Colour {
+    pub const fn from_hex(hex: u32) -> Colour {
         Colour {
             alpha:{
                     let a =( (hex >> 24) & 0xFF) as u8;
@@ -65,6 +73,7 @@ impl Colour {
 
 pub static mut GLOBAL_FRAME_BUFFER: FrameBuffer = FrameBuffer::const_default();
 
+#[derive(Clone, Copy)]
 pub struct FrameBuffer {
     pub base_address: u64,
     pub pixels_per_scan_line: u32,
@@ -79,6 +88,10 @@ impl FrameBuffer {
         Self { base_address, pixels_per_scan_line, horizontal_resolution, vertical_resolution}
     }
 }
+
+static mut PAST_BG_PIXEL: u32 = 0;
+static mut PAST_FG_PIXEL: u32 = 0;
+
 pub unsafe trait PutPixel {
     unsafe fn put_pixel(&self, pos_x: u32, pos_y: u32, colour: &Colour);
     unsafe fn put_pixel_with_alpha_correction(&self, pos_x: u32, pos_y: u32, colour: &Colour);
@@ -92,8 +105,16 @@ unsafe impl PutPixel for FrameBuffer {
             return;
         }
         else if colour.alpha != 0xff {
-            let bg_colour: Colour = Colour::from_hex(*((self.base_address + 4 * self.pixels_per_scan_line as u64 * pos_y as u64 + 4 * pos_x as u64) as *const u32));       
-            self.put_pixel(pos_x, pos_y, &colour.alpha_composite(&bg_colour));
+            let colour: Colour  = if *((self.base_address + 4 * self.pixels_per_scan_line as u64 * pos_y as u64 + 4 * pos_x as u64) as *const u32) == PAST_BG_PIXEL {
+                Colour::from_hex(PAST_FG_PIXEL)
+            }
+            else {
+                let c: Colour = colour.alpha_composite(&Colour::from_hex(*((self.base_address + 4 * self.pixels_per_scan_line as u64 * pos_y as u64 + 4 * pos_x as u64) as *const u32)));
+                PAST_BG_PIXEL =  *((self.base_address + 4 * self.pixels_per_scan_line as u64 * pos_y as u64 + 4 * pos_x as u64) as *const u32);
+                PAST_FG_PIXEL = c.to_hex();
+                c
+            };
+            self.put_pixel(pos_x, pos_y, &colour);
         }
         else {
             self.put_pixel(pos_x, pos_y, colour);
@@ -128,7 +149,6 @@ impl Functions for FrameBuffer {
 
 pub trait PsfFontFunctions {
     fn put_char(&self, font: &psf::FontInfo, pos_x: u32, pos_y: u32, char: char, fg_colour: &Colour, bg_colour: &Colour);
-    fn put_string(&self, font: &psf::FontInfo, pos_x: u32, pos_y: u32, string: &str, fg_colour: &Colour, bg_colour: &Colour);
 }
 impl<T: PutPixel> PsfFontFunctions for T {
     fn put_char(&self, font: &psf::FontInfo, pos_x: u32, pos_y: u32, char: char, fg_colour: &Colour, bg_colour: &Colour) {
@@ -146,9 +166,4 @@ impl<T: PutPixel> PsfFontFunctions for T {
         }
     }
 
-    fn put_string(&self, font: &psf::FontInfo, pos_x: u32, pos_y: u32, string: &str, fg_colour: &Colour, bg_colour: &Colour) {
-        for char in string.chars() {
-            self.put_char(font, pos_x, pos_y, char, fg_colour, bg_colour);
-        }
-    }
 }

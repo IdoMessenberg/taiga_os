@@ -1,4 +1,5 @@
-use graphics_deriver::{Colour, Functions, GLOBAL_FRAME_BUFFER};
+
+use crate::terminal::GLOBAL_TERMINAL;
 
 
 pub const IDT_TA_INTERRUPT_GATE:u8 = 0b10001110;
@@ -79,6 +80,12 @@ pub unsafe fn load_idt() {
 pub struct InterruptFrame{}
 
 pub unsafe extern "x86-interrupt" fn page_fault_handler(_frame: *const InterruptFrame) -> ! {
-    GLOBAL_FRAME_BUFFER.clear_screen(&Colour::from_hex(0xffffffff));
+    GLOBAL_TERMINAL.fill_screen(&GLOBAL_TERMINAL.theme.red);
+    GLOBAL_TERMINAL.pos_x = 0;
+    GLOBAL_TERMINAL.pos_y = 0;
+    GLOBAL_TERMINAL.bg_colour = GLOBAL_TERMINAL.theme.red;
+    GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.white;
+
+    GLOBAL_TERMINAL.print("page fault");
     panic!()
 }

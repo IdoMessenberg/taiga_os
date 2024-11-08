@@ -16,3 +16,35 @@ simple operating system written from scratch, in rust
     `rustup target add x86_64-unknown-none`
 2. build the the operating system `./batch/build` and `d`
 3. run `./batch/run`
+
+
+## config file
+default config file
+
+```
+# conf.toml
+[loader_paths]
+kernel-path = "kernelx64"
+font-path = "font.psf"
+#font-path = "font_16x8_thin.psf"
+
+[graphics.theme]
+dark-mode = true
+white = 0xEBE3BD
+black = 0x282828
+red = 0xCF271F
+green = 0x989718
+blue = 0x478788
+yellow = 0xD79820
+orange = 0xE08016
+purple = 0xB06087
+gray = 0xE8D8B0
+dark-gray = 0xA09181
+light-red = 0xF84837
+light-green = 0xB8B827
+light-blue = 0x80A798
+light-yellow = 0xF8BF2F
+light-orange = 0xF3942C
+light-purple = 0xD08798
+
+```

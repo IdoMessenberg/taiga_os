@@ -66,7 +66,7 @@ pub fn parse_config_toml<'b>(file: &'b[u8]) -> Result<File<'b>, efi::Status>{
     if let Some(table) = tables.get("graphics.theme") {
         for key_value in table {
             match key_value.0 {
-                "dark_mode" => if let TomlValue::Boolean(v) = key_value.1 {file.graphics_theme.dark_mode = v;},
+                "dark-mode" => if let TomlValue::Boolean(v) = key_value.1 {file.graphics_theme.dark_mode = v;},
                 "white" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.white = v as u32;}
                 "black" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.black = v as u32;} 
                 "red" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.red = v as u32;} 
@@ -76,13 +76,13 @@ pub fn parse_config_toml<'b>(file: &'b[u8]) -> Result<File<'b>, efi::Status>{
                 "orange" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.orange = v as u32;} 
                 "purple" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.purple = v as u32;} 
                 "gray" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.gray = v as u32;} 
-                "dark_gray" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.dark_gray = v as u32;} 
-                "light_red" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_red = v as u32;} 
-                "light_green" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_green = v as u32;} 
-                "light_blue" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_blue = v as u32;} 
-                "light_yellow" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_yellow = v as u32;} 
-                "light_orange" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_orange = v as u32;} 
-                "light_purple" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_purple = v as u32;} 
+                "dark-gray" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.dark_gray = v as u32;} 
+                "light-red" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_red = v as u32;} 
+                "light-green" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_green = v as u32;} 
+                "light-blue" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_blue = v as u32;} 
+                "light-yellow" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_yellow = v as u32;} 
+                "light-orange" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_orange = v as u32;} 
+                "light-purple" => if let TomlValue::HexInteger(v) = key_value.1 {file.graphics_theme.light_purple = v as u32;} 
                 _ => continue,
             }
         }
