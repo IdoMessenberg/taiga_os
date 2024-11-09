@@ -122,7 +122,7 @@ impl PageTableManager {
         pde.set_addr(physical_addr >> 12);
         pde.set_flag(Flags::Present, true);
         pde.set_flag(Flags::ReadWrite, true);
-        unsafe{*pt}.0[indexer.p_i] = pde;
+        unsafe{(*pt).0[indexer.p_i] = pde;}
     }
 }
 
@@ -143,7 +143,7 @@ pub unsafe fn init(boot_info: &util::BootInfo) {
     }
     core::arch::
     asm!(
-        "mov {x} , cr3", 
+        "mov cr3, {x}", 
         x  = in(reg) PML4
     );
 }
