@@ -31,6 +31,7 @@ pub enum Flags {
     //CacheDisable = 4,
     //Accessed = 5,
     //PageSize = 7,
+    //Global = 8,
     //Available0 = 9,
     //Available1 = 10,
     //Available2 = 11,
@@ -73,11 +74,12 @@ impl PageTableManager {
             
             pdp = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap()}  as *mut PageTable; 
             unsafe{
-                core::ptr::write_bytes(pdp, 0, pfa::PAGE_SIZE);
+                core::ptr::write_bytes(pdp, 0, 1);
             }
             pde.set_addr((pdp as u64) >> 12);
             pde.set_flag(Flags::Present, true);
             pde.set_flag(Flags::ReadWrite, true);
+            
             unsafe{(*self.pml4).0[indexer.pdp_i] = pde}
         }
         else {
@@ -89,7 +91,7 @@ impl PageTableManager {
         if !pde.get_flag(Flags::Present) {
             pd = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap() } as *mut PageTable; 
             unsafe{
-                core::ptr::write_bytes(pd, 0, pfa::PAGE_SIZE);
+                core::ptr::write_bytes(pd , 0, 1);
             }
             pde.set_addr((pd as u64) >> 12);
             pde.set_flag(Flags::Present, true);
@@ -105,7 +107,7 @@ impl PageTableManager {
         if !pde.get_flag(Flags::Present) {
             pt = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap() } as *mut PageTable; 
             unsafe{
-                core::ptr::write_bytes(pt, 0, pfa::PAGE_SIZE);
+                core::ptr::write_bytes(pt , 0, 1);
             }
             pde.set_addr((pt as u64) >> 12);
             pde.set_flag(Flags::Present, true);
@@ -129,7 +131,7 @@ pub static mut PML4: *mut PageTable = core::ptr::null_mut();
 pub static mut PTM: PageTableManager = PageTableManager{pml4: core::ptr::null_mut()};
 pub unsafe fn init(boot_info: &util::BootInfo) {
     PML4 = page_frame_allocator::GLOBAL_ALLOC.get_free_page().unwrap() as *mut PageTable; 
-    core::ptr::write_bytes(PML4, 0, pfa::PAGE_SIZE);
+    core::ptr::write_bytes(PML4 , 0, 1);
     
     PTM = PageTableManager{pml4:PML4};
     

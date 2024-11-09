@@ -6,7 +6,7 @@ pub struct Bitmap {
 
 impl Bitmap {
     pub fn new(size: usize, addr: u64) -> Self {
-        unsafe { core::ptr::write_bytes(addr as *mut u8, 0x0, size/8 + size % 8) ;}
+        unsafe { core::ptr::write_bytes(addr as *mut u8, 0, size/8 + size % 8) ;}
         Bitmap { size, addr }
     }
 

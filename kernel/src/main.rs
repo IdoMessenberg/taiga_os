@@ -12,7 +12,7 @@ mod idt;
 mod terminal;
 
 use gdt::*;
-use graphics_deriver::Functions;
+//use graphics_deriver::Functions;
 use terminal::GLOBAL_TERMINAL;
 
 extern "C" {
@@ -46,7 +46,7 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
         GLOBAL_TERMINAL.clear_screen();
 
     }
-
+    //Terminal colour test
     unsafe {
         GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.red;
         GLOBAL_TERMINAL.put_num(&1);
@@ -74,15 +74,19 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
         GLOBAL_TERMINAL.put_num(&12);
         GLOBAL_TERMINAL.print("\r\n\n\t");
     }
+
+    //Virtual memory test
     unsafe {
         
-        memory_driver::virtual_memory::PTM.map_memory(0x80000, 0x60000000);
+        memory_driver::virtual_memory::PTM.map_memory(0x80000, 0x600000000);
     }
-        let test :*mut usize = 0x60000000 as *mut usize;
+    let test :*mut usize = 0x600000000 as *mut usize;
     unsafe{
+        //core::ptr::write_volatile(test, 4837589437589);
         *test = 4837589437589;
         GLOBAL_TERMINAL.put_num(&(*test));  
     };
+
     panic!()
 }
 
