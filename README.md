@@ -21,12 +21,11 @@ simple operating system written from scratch, in rust
 ## config file
 default config file
 
-```
+```toml
 # conf.toml
 [loader_paths]
 kernel-path = "kernelx64"
 font-path = "font.psf"
-#font-path = "font_16x8_thin.psf"
 
 [graphics.theme]
 dark-mode = true
