@@ -11,8 +11,6 @@ mod gdt;
 mod idt;
 mod terminal;
 
-use core::usize;
-
 use gdt::*;
 use graphics_deriver::Functions;
 use terminal::GLOBAL_TERMINAL;
@@ -31,7 +29,7 @@ extern "efiapi" fn _start(boot_info: util::BootInfo) -> ! {main(boot_info)}
 extern "C" fn main(boot_info: util::BootInfo) -> ! {
     let k_start: u64 = core::ptr::addr_of!(_k_start) as u64;
     let k_end: u64 = core::ptr::addr_of!(_k_end) as u64;
-    
+
     unsafe {
         graphics_deriver::GLOBAL_FRAME_BUFFER = graphics_deriver::FrameBuffer::const_init(
             boot_info.graphics.frame_buffer_base_address,
@@ -41,7 +39,7 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
         );
         load_gdt(Gdt::const_default());
         memory_driver::page_frame_allocator::GLOBAL_ALLOC.init(&boot_info, k_start, k_end);
-        memory_driver::virtual_memory::init(&boot_info);
+         memory_driver::virtual_memory::init(&boot_info);
         idt::load_idt();
         terminal::GLOBAL_TERMINAL = terminal::Terminal::new(&boot_info, graphics_deriver::GLOBAL_FRAME_BUFFER);
 
@@ -79,19 +77,17 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
     
     unsafe {
         
-        memory_driver::virtual_memory::PTM.map_memory(0x80000, 0x600000000);
+       // memory_driver::virtual_memory::PTM.map_memory(0x80000, 0x600000000);
     }
     let test :*mut usize = 0x600000000 as *mut usize;
     unsafe{
-        core::ptr::write_volatile(test, 4837589437589);
+       // core::ptr::write_volatile(test, 4837589437589);
         //*test = 4837589437589;
-        GLOBAL_TERMINAL.put_num(&(*test));  
+       // GLOBAL_TERMINAL.put_num(&(*test));  
     };
 
     panic!()
 }
-
-
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
