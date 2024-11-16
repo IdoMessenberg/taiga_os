@@ -1,5 +1,4 @@
 #[repr(C)]
-//#[derive(Clone, Copy)]
 pub struct PageDiractoryEntry(u64);
 impl PageDiractoryEntry {
     pub fn get_flag(&self, flag: Flags) -> bool {
@@ -48,7 +47,7 @@ pub struct PageMapIndexer {
 }
 impl PageMapIndexer {
     pub fn new(virtual_addr: u64) -> Self {
-        let mut  vr = virtual_addr;
+        let mut  vr: u64 = virtual_addr.clone();
         vr >>= 12;
         let p_i: usize = (vr & 0x1ff) as usize;
         vr >>= 9;
@@ -64,69 +63,65 @@ impl PageMapIndexer {
 pub struct PageTableManager{pub pml4 :*mut PageTable}
 impl PageTableManager {
     pub fn map_memory(&self, physical_addr: u64, virtual_addr: u64) {
-        let indexer = PageMapIndexer::new(virtual_addr);
+        let indexer: PageMapIndexer = PageMapIndexer::new(virtual_addr);
 
-        //let mut pde = unsafe{*self.pml4}.0[indexer.pdp_i];
         let pdp: *mut PageTable;
-        if !unsafe{& *self.pml4}.0[indexer.pdp_i].get_flag(Flags::Present) {
-            
+        let pde: &mut PageDiractoryEntry = unsafe{&mut (&mut *self.pml4).0[indexer.pdp_i]};
+        if !pde.get_flag(Flags::Present) {
             pdp = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap()}  as *mut PageTable; 
             unsafe{
                 core::ptr::write_bytes(pdp, 0, 1);
             }
-            unsafe{&mut *self.pml4}.0[indexer.pdp_i].set_addr((pdp as u64) >> 12);
-            unsafe{&mut *self.pml4}.0[indexer.pdp_i].set_flag(Flags::Present, true);
-            unsafe{&mut *self.pml4}.0[indexer.pdp_i].set_flag(Flags::ReadWrite, true);
+            pde.set_addr((pdp as u64) >> 12);
+            pde.set_flag(Flags::Present, true);
+            pde.set_flag(Flags::ReadWrite, true);
             
-            //unsafe{(*self.pml4).0[indexer.pdp_i] = pde}
         }
         else {
-            pdp = (unsafe{& *self.pml4}.0[indexer.pdp_i].get_addr() << 12) as *mut PageTable
+            pdp = (pde.get_addr() << 12) as *mut PageTable
         }
 
-        //pde = unsafe{*pdp}.0[indexer.pd_i];
         let pd:  *mut PageTable;
-        if !unsafe{& *pdp}.0[indexer.pd_i].get_flag(Flags::Present) {
+        let pde: &mut PageDiractoryEntry = unsafe{&mut (&mut *pdp).0[indexer.pd_i]};
+        if !pde.get_flag(Flags::Present) {
             pd = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap() } as *mut PageTable; 
             unsafe{
                 core::ptr::write_bytes(pd , 0, 1);
             }
-            unsafe{&mut *pdp}.0[indexer.pd_i].set_addr((pd as u64) >> 12);
-            unsafe{&mut *pdp}.0[indexer.pd_i].set_flag(Flags::Present, true);
-            unsafe{&mut *pdp}.0[indexer.pd_i].set_flag(Flags::ReadWrite, true);
-            //unsafe{(*pdp).0[indexer.pd_i] = pde}
+            pde.set_addr((pd as u64) >> 12);
+            pde.set_flag(Flags::Present, true);
+            pde.set_flag(Flags::ReadWrite, true);
         }
         else {
-            pd = (unsafe{& *pdp}.0[indexer.pd_i].get_addr() << 12) as *mut PageTable
+            pd = (pde.get_addr() << 12) as *mut PageTable
         }
 
-        //pde = unsafe{*pd}.0[indexer.pt_i];
         let pt: *mut PageTable;
-        if !unsafe{& *pd}.0[indexer.pt_i].get_flag(Flags::Present) {
+        let pde: &mut PageDiractoryEntry = unsafe{&mut (&mut *pd).0[indexer.pt_i]};
+        if !pde.get_flag(Flags::Present) {
             pt = unsafe{ pfa::GLOBAL_ALLOC.get_free_page().unwrap() } as *mut PageTable; 
             unsafe{
                 core::ptr::write_bytes(pt , 0, 1);
             }
-            unsafe{&mut *pd}.0[indexer.pt_i].set_addr((pt as u64) >> 12);
-            unsafe{&mut *pd}.0[indexer.pt_i].set_flag(Flags::Present, true);
-            unsafe{&mut *pd}.0[indexer.pt_i].set_flag(Flags::ReadWrite, true);
-            //unsafe{(*pd).0[indexer.pt_i] = pde}
+            pde.set_addr((pt as u64) >> 12);
+            pde.set_flag(Flags::Present, true);
+            pde.set_flag(Flags::ReadWrite, true);
         }
         else {
-            pt = (unsafe{& *pd}.0[indexer.pt_i].get_addr() << 12) as *mut PageTable
+            pt = (pde.get_addr() << 12) as *mut PageTable
         }
 
-        //pde = unsafe {*pt}.0[indexer.p_i];
-        unsafe{&mut *pt}.0[indexer.p_i].set_addr(physical_addr >> 12);
-        unsafe{&mut *pt}.0[indexer.p_i].set_flag(Flags::Present, true);
-        unsafe{&mut *pt}.0[indexer.p_i].set_flag(Flags::ReadWrite, true);
-        //unsafe{(*pt).0[indexer.p_i] = pde;}
+        let pde: &mut PageDiractoryEntry = unsafe{&mut (&mut *pt).0[indexer.p_i]};
+        pde.set_addr(physical_addr >> 12);
+        pde.set_flag(Flags::Present, true);
+        pde.set_flag(Flags::ReadWrite, true);
     }
 }
 
 
 pub static mut PML4: *mut PageTable = core::ptr::null_mut();
 pub static mut PTM: PageTableManager = PageTableManager{pml4: core::ptr::null_mut()};
+#[inline]
 pub unsafe fn init(boot_info: &util::BootInfo) {
     PML4 = page_frame_allocator::GLOBAL_ALLOC.get_free_page().unwrap() as *mut PageTable; 
     core::ptr::write_bytes(PML4 , 0, 1);
@@ -143,9 +138,9 @@ pub unsafe fn init(boot_info: &util::BootInfo) {
     let v: u64 = 0x80000000;
     core::arch::
     asm!(
-        "mov cr3, {x}", 
-        x  = in(reg) PML4,
-        options(nostack)
+        "mov cr3, {x}",
+        x = in(reg) PML4 as u64,
+        options(nostack, preserves_flags)
     );
     core::arch::
     asm!(

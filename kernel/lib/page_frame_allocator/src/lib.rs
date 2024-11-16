@@ -75,9 +75,9 @@ impl PageFrameAllocator {
     }
     
     pub fn get_free_page<'a>(&'a mut self) -> Option<u64> {
-        for i in self.first_free_page_index..self.page_bitmap.size {
+        for i in 0..self.page_bitmap.size {
             if !self.page_bitmap[i] {
-                self.first_free_page_index = i;
+               // self.first_free_page_index = i;
                 self.lock_page(i * crate::PAGE_SIZE);
                 unsafe {
                     core::ptr::write_bytes((i * crate::PAGE_SIZE) as *mut u8, 0, crate::PAGE_SIZE);
