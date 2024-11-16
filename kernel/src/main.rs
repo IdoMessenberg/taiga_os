@@ -5,7 +5,6 @@
 
 extern crate uefi as efi;
 extern crate psf as psfont;
-extern  crate memory_driver;
 
 mod gdt;
 mod idt;
@@ -13,7 +12,7 @@ mod terminal;
 
 use gdt::*;
 use graphics_deriver::Functions;
-use memory_driver::page_frame_allocator::GLOBAL_ALLOC;
+use page_frame_allocator::GLOBAL_ALLOC;
 use terminal::GLOBAL_TERMINAL;
 
 extern "C" {
@@ -39,9 +38,9 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
             boot_info.graphics.vertical_resolution
         );
         load_gdt(Gdt::const_default());
-        memory_driver::page_frame_allocator::GLOBAL_ALLOC.init(&boot_info, k_start, k_end);
+        page_frame_allocator::GLOBAL_ALLOC.init(&boot_info, k_start, k_end);
         idt::load_idt();
-        memory_driver::virtual_memory::init(&boot_info);
+        
         terminal::GLOBAL_TERMINAL = terminal::Terminal::new(&boot_info, graphics_deriver::GLOBAL_FRAME_BUFFER);
 
         GLOBAL_TERMINAL.clear_screen();
@@ -76,17 +75,7 @@ extern "C" fn main(boot_info: util::BootInfo) -> ! {
         GLOBAL_TERMINAL.put_num(&12);
         GLOBAL_TERMINAL.print("\r\n\n\t");
     }
-    
-    unsafe {
-        
-        //ptm.map_memory(GLOBAL_ALLOC.get_free_page().unwrap(), 0x90000000000);
-    }
-    let test :*mut usize = 0x90000000000 as *mut usize;
-    unsafe{
-       //core::ptr::write_volatile(test, 4837589437589);
-        //*test = 4837589437589;
-        //GLOBAL_TERMINAL.put_num(&(*test));  
-    };
+
 
     panic!()
 }

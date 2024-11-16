@@ -21,7 +21,7 @@ codegen-units = 1
 util = { path = "lib/util" }
 uefi = { path = "../bootloader/lib/uefi"}
 psf = { path = "lib/fonts/psf" }
-memory_driver = { path = "drivers/memory" }
+page_frame_allocator = { path = "lib/page_frame_allocator" }
 graphics_deriver = { path = "drivers/graphics" }
 #efi_file_loader ={ path = "../bootloader/lib/efi_file_loader"}
 
