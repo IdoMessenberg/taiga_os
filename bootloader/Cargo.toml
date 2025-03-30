@@ -1,23 +1,35 @@
 [package]
 name = "bootloader"
-version = "0.1.0"
-edition = "2021"
-authors = ["Ido Messenberg"]
+version = "0.0.5"
+edition = "2024"
+
+[features]
+default = ["uefi_tools", "elf_loader", "psf_loader/loader", "config_parser"]
+lib = ["psf_loader"]
 
 [[bin]]
-path = "src/main.rs"
 name = "bootx64"
+path = "src/main.rs"
 test = false
 bench = false
 
+[lib]
+name = "boot"
+path = "src/lib.rs"
+
 [profile.release]
-strip = true
-opt-level = "s"
+strip="debuginfo"
+opt-level = "z"
 lto = true
 codegen-units = 1
+panic = "abort"
 
 [dependencies]
-uefi = { path = "lib/uefi" }
-efi_file_loader = { path = "lib/efi_file_loader" }
-efi_functions = { path = "lib/efi_functions" }
-psf = {path = "../kernel/lib/fonts/psf"}
+uefi = {path = "lib/uefi"}
+uefi_tools = {path = "lib/uefi_tools", optional = true}
+elf_loader = {path = "lib/elf_loader", features = ["loader"], optional = true}
+psf_loader = {path = "lib/psf_loader", optional = true}
+config_parser = {path = "lib/config_parser", optional = true}
+
+[lints.clippy]
+undocumented_unsafe_blocks = "warn"

@@ -1,8 +1,0 @@
-[package]
-name = "graphics_deriver"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-uefi = { path = "../../../bootloader/lib/uefi" }
-psf = { path = "../../lib/fonts/psf" }

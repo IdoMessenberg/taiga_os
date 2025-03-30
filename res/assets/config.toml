@@ -1,0 +1,8 @@
+[kernel]
+path = "kernelx64"
+#verbose_boot_mode = true # <- shows debug info, options: true, false (moved to env vars)
+[graphics]
+mode = "dark"
+theme = "default" # <- need to be a toml file in the theme folder
+font = "default" # <- needs to be a psf font, in the fonts folder
+resolution = "default" # <- default, hd , 2k, (todo: add 4k) 

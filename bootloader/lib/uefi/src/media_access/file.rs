@@ -39,7 +39,7 @@ pub struct Info {
 //https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=590
 //Open file modes
 pub const READ_MODE: u64 = 0x0000000000000001;
-//Open file attribtes
+//Open file attributes
 pub const READ_ONLY: u64 = 0x0000000000000001;
 pub const HIDDEN: u64 = 0x0000000000000002;
 pub const SYSTEM: u64 = 0x0000000000000004;

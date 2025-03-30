@@ -1,0 +1,24 @@
+[package]
+name = "elf_loader"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
+
+[features]
+default = []
+loader = ["uefi_tools"]
+
+[dependencies]
+uefi = {path="../uefi"}
+
+[dependencies.uefi_tools]
+path = "../uefi_tools"
+optional = true
+
+[lints.clippy]
+undocumented_unsafe_blocks = "warn"

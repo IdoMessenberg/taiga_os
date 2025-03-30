@@ -5,3 +5,7 @@ Cargo.lock
 # proj ignore
 logs.log
 bin/
+
+# workspace ignore
+.vscode/
+ovmf/

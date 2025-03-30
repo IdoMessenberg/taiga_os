@@ -1,8 +1,7 @@
 [package]
 name = "kernel"
 version = "0.1.0"
-edition = "2021"
-authors = ["Ido Messenberg"]
+edition = "2024"
 
 [[bin]]
 path = "src/main.rs"
@@ -12,17 +11,11 @@ bench = false
 
 [profile.release]
 strip = true
-opt-level = "s"
+#opt-level = "z"
 lto = true
 codegen-units = 1
-#panic = "unwind"
+panic = "abort"
+
 
 [dependencies]
-util = { path = "lib/util" }
-uefi = { path = "../bootloader/lib/uefi"}
-psf = { path = "lib/fonts/psf" }
-page_frame_allocator = { path = "lib/page_frame_allocator" }
-graphics_deriver = { path = "drivers/graphics" }
-#efi_file_loader ={ path = "../bootloader/lib/efi_file_loader"}
-
-#taiga-os-bootloader = { path = "../bootloader" }
+bootloader = {path = "../bootloader", features = ["lib"], default-features = false}

@@ -9,6 +9,7 @@
 simple operating system written from scratch, in rust 
 
 ## how to build
+### needed
 * rust compiler
 * qemu
 

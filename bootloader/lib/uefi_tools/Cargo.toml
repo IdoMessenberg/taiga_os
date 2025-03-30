@@ -1,6 +1,6 @@
 [package]
-name = "uefi"
-version = "0.1.1"
+name = "uefi_tools"
+version = "0.1.0"
 edition = "2024"
 
 [profile.release]
@@ -8,6 +8,9 @@ strip = true
 opt-level = "s"
 lto = true
 codegen-units = 1
+
+[dependencies]
+uefi = {path = "../uefi"}
 
 [lints.clippy]
 undocumented_unsafe_blocks = "warn"

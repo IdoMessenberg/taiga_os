@@ -4,7 +4,7 @@ pub struct Guid(pub u32, pub u16, pub u16, pub [u8; 8]);
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=2269
 #[repr(usize)]
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Status {
     Success             = 0,
     LoadError           = 1,
@@ -29,7 +29,7 @@ pub enum Status {
     AlreadyStarted      = 20,
     Aborted             = 21,
     IcmpError           = 22,
-    TftpErorr           = 23,
+    TftpError           = 23,
     ProtocolError       = 24,
     IncompatibleVersion = 25,
     SecurityViolation   = 26,
@@ -51,6 +51,7 @@ pub enum Status {
 impl Status {
     pub fn is_ok(&self) -> bool { self == &Status::Success }
 }
+
 
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=241
 #[repr(C)]
@@ -107,8 +108,8 @@ pub struct PixelBitmask {
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=561
 #[repr(C)]
 pub enum PixelFormat {
-    PixelRedGreenBlueReserved8BitPerColor,
-    PixelBlueGreenRedReserved8BitPerColor,
+    PixelRedGreenBlueReserved8BitPerColour,
+    PixelBlueGreenRedReserved8BitPerColour,
     PixelBitMask,
     PixelBltOnly,
     PixelFormatMax,
@@ -147,4 +148,31 @@ pub enum ResetType {
     Warm,
     Shutdown,
     PlatformSpecific
+}
+
+#[repr(C)]
+#[derive(Default, Clone, Copy)]
+#[derive(Debug)]
+
+pub struct MemoryMapInfo {
+    pub address:            u64,
+    pub size:               usize,
+    pub key:                usize,
+    pub descriptor_size:    usize,
+    pub descriptor_version: u32,
+}
+impl MemoryMapInfo {
+    pub fn get_available_memory_bytes(&self) -> usize {
+        self.get_pages() * 0x1000
+    }
+    pub fn get_pages(&self) -> usize{
+        let mut pages: usize = 0;
+        for i in 0..self.size/self.descriptor_size {
+            let desc: &MemoryDescriptor = unsafe {
+                &*((self.address + self.descriptor_size as u64 * i as u64) as *const MemoryDescriptor)
+            };
+            pages += desc.number_of_pages as usize;
+        };
+        pages
+    }
 }

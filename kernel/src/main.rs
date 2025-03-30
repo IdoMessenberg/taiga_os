@@ -1,93 +1,30 @@
-#![no_std]
-#![no_main]
-#![feature(abi_x86_interrupt)]
-#![allow(static_mut_refs)]
+#![no_std] #![no_main]
+use core::panic::PanicInfo;
+extern crate boot;
+use boot::_BootInfo_;
 
-extern crate uefi as efi;
-extern crate psf as psfont;
-
-mod gdt;
-mod idt;
-mod terminal;
-
-use gdt::*;
-use graphics_deriver::Functions;
-use page_frame_allocator::GLOBAL_ALLOC;
-use terminal::GLOBAL_TERMINAL;
-
-extern "C" {
-    #[link_name = "__k_start_addr"]
-    static mut _k_start: u8;
-    #[link_name = "__k_end_addr"]
-    static mut _k_end: u8;
+#[unsafe(no_mangle)]
+extern "efiapi" fn _start(boot_info: _BootInfo_) -> ! {
+    k_main(boot_info)
 }
 
-#[no_mangle]
-extern "efiapi" fn _start(boot_info: util::BootInfo) -> ! {main(boot_info)}
-
-
-extern "C" fn main(boot_info: util::BootInfo) -> ! {
-    let k_start: u64 = core::ptr::addr_of!(_k_start) as u64;
-    let k_end: u64 = core::ptr::addr_of!(_k_end) as u64;
-
-    unsafe {
-        graphics_deriver::GLOBAL_FRAME_BUFFER = graphics_deriver::FrameBuffer::const_init(
-            boot_info.graphics.frame_buffer_base_address,
-            boot_info.graphics.pixels_per_scan_line,
-            boot_info.graphics.horizontal_resolution,
-            boot_info.graphics.vertical_resolution
-        );
-        load_gdt(Gdt::const_default());
-        page_frame_allocator::GLOBAL_ALLOC.init(&boot_info, k_start, k_end);
-        idt::load_idt();
-        
-        terminal::GLOBAL_TERMINAL = terminal::Terminal::new(&boot_info, graphics_deriver::GLOBAL_FRAME_BUFFER);
-
-        GLOBAL_TERMINAL.clear_screen();
-
+fn k_main(boot_info: _BootInfo_) -> ! {    
+    for x in 0..boot_info.graphics.horizontal_resolution {
+        for y in 0..boot_info.graphics.vertical_resolution {
+            unsafe {
+                core::ptr::write_volatile((boot_info.graphics.framebuffer_base_address + 4 * boot_info.graphics.pixels_per_scan_line as u64 * y as u64 + x as u64 * 4) as *mut u32, boot_info.theme.black);
+            }
+        }
     }
-
-
-    unsafe {
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.red;
-        GLOBAL_TERMINAL.put_num(&1);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.green;
-        GLOBAL_TERMINAL.put_num(&2);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.blue;
-        GLOBAL_TERMINAL.put_num(&3);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.yellow;
-        GLOBAL_TERMINAL.put_num(&4);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.orange;
-        GLOBAL_TERMINAL.put_num(&5);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.purple;
-        GLOBAL_TERMINAL.put_num(&6);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_red;
-        GLOBAL_TERMINAL.put_num(&7);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_green;
-        GLOBAL_TERMINAL.put_num(&8);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_blue;
-        GLOBAL_TERMINAL.put_num(&9);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_yellow;
-        GLOBAL_TERMINAL.put_num(&10);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_orange;
-        GLOBAL_TERMINAL.put_num(&11);
-        GLOBAL_TERMINAL.fg_colour = GLOBAL_TERMINAL.theme.light_purple;
-        GLOBAL_TERMINAL.put_num(&12);
-        GLOBAL_TERMINAL.print("\r\n\n\t");
-    }
-
-
     panic!()
 }
 
+
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {
-        //safety: 
-        // This should be safe cause if you reached here you already fucked up
-        unsafe {
-            // And this literally does nothing (tells the CPU to halt and do nothing)
-            core::arch::asm!("hlt"); 
+fn panic(_info: &PanicInfo) -> !{
+    unsafe {
+        loop{
+            core::arch::asm!("hlt")
         }
     }
 }

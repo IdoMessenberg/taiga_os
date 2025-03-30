@@ -39,7 +39,7 @@ impl core::default::Default for ModeInformation {
             version:               0,
             horizontal_resolution: 0,
             vertical_resolution:   0,
-            pixel_format:          PixelFormat::PixelRedGreenBlueReserved8BitPerColor,
+            pixel_format:          PixelFormat::PixelRedGreenBlueReserved8BitPerColour,
             pixel_information:     PixelBitmask{
                 red_mask:      0,
                 green_mask:    0,
@@ -49,4 +49,13 @@ impl core::default::Default for ModeInformation {
             pixels_per_scan_line:  0,
         }
     }
+}
+
+#[repr(C)]
+pub struct Info {
+    pub frame_buffer_base_address: u64,
+    pub frame_buffer_size:         usize,
+    pub horizontal_resolution:     u32,
+    pub vertical_resolution:       u32,
+    pub pixels_per_scan_line:      u32,
 }

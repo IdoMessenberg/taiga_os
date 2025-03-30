@@ -34,7 +34,7 @@ pub struct Services {
     exit:                                  extern "efiapi" fn() -> Status,
     unload_image:                          extern "efiapi" fn() -> Status,
     pub exit_boot_services:                extern "efiapi" fn(image_handle: *const c_void, map_key: usize) -> Status,
-    get_next_montonic_count:               extern "efiapi" fn() -> Status,
+    get_next_monotonic_count:              extern "efiapi" fn() -> Status,
     stall:                                 extern "efiapi" fn() -> Status,
     set_watchdog_timer:                    extern "efiapi" fn() -> Status, //
     connect_controller:                    extern "efiapi" fn() -> Status,
@@ -45,7 +45,7 @@ pub struct Services {
     protocols_per_handle:                  extern "efiapi" fn() -> Status,
     locate_handle_buffer:                  extern "efiapi" fn() -> Status,
     pub locate_protocol:                   extern "efiapi" fn(protocol: *const Guid, registration: *const c_void, interface: *const *const c_void) -> Status,
-    install_multiple_protocol_interafes:   extern "efiapi" fn() -> Status,
+    install_multiple_protocol_interfaces:  extern "efiapi" fn() -> Status,
     uninstall_multiple_protocol_interface: extern "efiapi" fn() -> Status,
     calculate_crc_32:                      extern "efiapi" fn() -> Status,
     pub copy_mem:                          extern "efiapi" fn(destination: *const c_void, source: *const c_void, length: usize) -> c_void,
