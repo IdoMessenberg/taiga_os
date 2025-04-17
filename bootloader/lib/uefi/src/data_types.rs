@@ -1,3 +1,4 @@
+
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=256
 #[repr(C)]
 pub struct Guid(pub u32, pub u16, pub u16, pub [u8; 8]);
@@ -152,8 +153,6 @@ pub enum ResetType {
 
 #[repr(C)]
 #[derive(Default, Clone, Copy)]
-#[derive(Debug)]
-
 pub struct MemoryMapInfo {
     pub address:            u64,
     pub size:               usize,
@@ -162,17 +161,17 @@ pub struct MemoryMapInfo {
     pub descriptor_version: u32,
 }
 impl MemoryMapInfo {
-    pub fn get_available_memory_bytes(&self) -> usize {
-        self.get_pages() * 0x1000
-    }
     pub fn get_pages(&self) -> usize{
         let mut pages: usize = 0;
-        for i in 0..self.size/self.descriptor_size {
-            let desc: &MemoryDescriptor = unsafe {
-                &*((self.address + self.descriptor_size as u64 * i as u64) as *const MemoryDescriptor)
-            };
-            pages += desc.number_of_pages as usize;
+        for index in 0..self.size/self.descriptor_size - 1 {
+            let descriptor: &MemoryDescriptor =  self.get_memory_descriptor(index as u64);
+            pages += descriptor.number_of_pages as usize;
         };
         pages
+    }
+    pub fn get_memory_descriptor(&self, index: u64) -> &MemoryDescriptor {
+        unsafe {
+            &*((self.address + self.descriptor_size as u64 * index) as *const MemoryDescriptor)
+        }
     }
 }

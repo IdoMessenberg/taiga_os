@@ -3,13 +3,13 @@
 extern crate uefi as efi;
 extern crate alloc as std_alloc;
 use core::{ffi::c_void, mem::transmute, panic::PanicInfo, str::from_utf8};
-use boot::{GraphicsInfo, TerminalTheme, _BootInfo_};
+use boot::{GraphicsInfo, TerminalTheme};
 use std_alloc::{format, vec::Vec};
 use uefi_tools::{alloc::{self, BootTimeAllocFunctions}, console::ConsoleOutputFunctions, file::{FileFunctions, Thing}, graphics::{BootTimeGraphicsFunctions, GraphicsFunctions}};
 const _CONFIG_FILE_PATH: *const u16 = [b'c' as u16, b'o' as u16, b'n' as u16, b'f' as u16, b'i' as u16, b'g' as u16, b'.' as u16, b't' as u16, b'o' as u16, b'm' as u16, b'l' as u16, 0].as_ptr();
 static mut __PANIC_CON_OUT__: *const efi::console_support::simple_text_output::Protocol = core::ptr::null();
 
-type _KernelEntry = extern "C" fn(_BootInfo_) -> !;
+type _KernelEntry = extern "C" fn(boot::_Info_) -> !;
 
 #[unsafe(export_name = "efi_main")]
 extern "C" fn main(handle: *const c_void, system_table: efi::system::Table<'static>) -> efi::Status {
@@ -23,7 +23,7 @@ extern "C" fn main(handle: *const c_void, system_table: efi::system::Table<'stat
         Ok(v) => v,
         Err(_) => panic!(),
     };
-    set_resolution(verbose_boot_mode, &config_info, &graphics_output_protocol);
+    set_resolution(verbose_boot_mode, &config_info, &graphics_output_protocol, &system_table);
     let colour_theme: config_parser::ColourTheme = get_colour_theme(verbose_boot_mode, &config_info, root, &system_table);
     let font_info: psf_loader::FontInfo = get_font_info(verbose_boot_mode, &config_info, root, &system_table);
     let _kernel_address: usize = loader_kernel(verbose_boot_mode, &config_info, root, &system_table);
@@ -34,7 +34,7 @@ extern "C" fn main(handle: *const c_void, system_table: efi::system::Table<'stat
         err if verbose_boot_mode => print_error(&format!("could not exit boot time services! : {:?}", err), &system_table),
         _ => panic!("exit err")
     }
-    let boot_info: _BootInfo_ = _BootInfo_{
+    let boot_info: boot::_Info_ = boot::_Info_{
         memory_map: memory_map,
         font: font_info,
         theme: TerminalTheme::from_config_colour_theme(colour_theme, config_info.graphics.dark_mode),
@@ -98,12 +98,15 @@ fn parse_config_file<'a>(verbose_boot_mode: bool, config_file: &'a[u8], system_t
         Err(_) => panic!()
     }
 }
-fn set_resolution(verbose_boot_mode: bool, config_info: &config_parser::Info, graphics_output_protocol: &efi::console_support::graphics_output::Protocol) {
+fn set_resolution(verbose_boot_mode: bool, config_info: &config_parser::Info, graphics_output_protocol: &efi::console_support::graphics_output::Protocol, system_table: &efi::system::Table) {
     let status: efi::Status = match config_info.graphics.resolution {
         config_parser::Resolution::_Hd => graphics_output_protocol.set_mode_to_resolution(1920, 1080),
         config_parser::Resolution::_2k => graphics_output_protocol.set_mode_to_resolution(2560, 1440),
         //config_parser::Resolution::_4k => {graphics_protocol.set_mode_to_resolution(3840, 2160 );} /currently not supported
-        config_parser::Resolution::_Custom(width, hight) => graphics_output_protocol.set_mode_to_resolution(width, hight),
+        config_parser::Resolution::_Custom(width, hight) => {
+            system_table.con_out.println(&format!("width:{}, hight:{}", width, hight));
+            graphics_output_protocol.set_mode_to_resolution(width, hight)
+        },
         _ => efi::Status::Success
     };
     match status {
@@ -136,7 +139,7 @@ fn get_colour_theme(verbose_boot_mode: bool, config_info: &config_parser::Info, 
     }
 }
 fn get_font_info(verbose_boot_mode: bool, config_info: &config_parser::Info, root: &efi::media_access::file::Protocol, system_table: &efi::system::Table) -> psf_loader::FontInfo {
-    let font_file_path: Vec<u16> = format!("fonts\\{}.psf\0", config_info.graphics.theme_path).encode_utf16().collect();
+    let font_file_path: Vec<u16> = format!("fonts\\{}.psf\0", config_info.graphics.font_path).encode_utf16().collect();
     let font_file: Vec<u8> = match root.get_file(font_file_path.as_ptr(), system_table) {
         Ok(v) if verbose_boot_mode => {
             print_success("font file is found and loaded!..", system_table);

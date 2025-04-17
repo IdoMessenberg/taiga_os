@@ -1,30 +1,57 @@
-#![no_std] #![no_main]
-use core::panic::PanicInfo;
-extern crate boot;
-use boot::_BootInfo_;
+#![no_std]#![no_main]
+#![feature(abi_x86_interrupt)]
 
+mod arch;
+mod drivers;
+mod mem;
+mod log;
+mod temp_terminal;
+
+use core::{arch::asm, panic::PanicInfo};
+use arch::{load_gdt, load_idt};
+use drivers::ps2::keyboard::init_ps2;
+use log::log_nl;
+use mem::page_frame_alloc::alloc::PageFrameAllocator;
+use temp_terminal::Terminal;
+
+unsafe extern "C" {
+    #[link_name = "__k_start_addr__"]
+    pub safe static __k_start_addr__: u8;
+    #[link_name = "__k_end_addr__"]
+    pub safe static __k_end_addr__: u8;
+}
+
+// for some reason the in boot info from the bootloader is passed
+// with the "efiapi" abi so the starting function needs to be formatted with this abi
 #[unsafe(no_mangle)]
-extern "efiapi" fn _start(boot_info: _BootInfo_) -> ! {
+extern "efiapi" fn _start(boot_info: boot::_Info_) -> ! {
+    log_nl("....moving to k main");
     k_main(boot_info)
 }
 
-fn k_main(boot_info: _BootInfo_) -> ! {    
-    for x in 0..boot_info.graphics.horizontal_resolution {
-        for y in 0..boot_info.graphics.vertical_resolution {
-            unsafe {
-                core::ptr::write_volatile((boot_info.graphics.framebuffer_base_address + 4 * boot_info.graphics.pixels_per_scan_line as u64 * y as u64 + x as u64 * 4) as *mut u32, boot_info.theme.black);
-            }
-        }
-    }
-    panic!()
-}
+static GLOBAL_PAGE_FRAME_ALLOCATOR: util::OnceLock<PageFrameAllocator> = util::OnceLock::new();
+static GLOBAL_TERMINAL: util::OnceLock<temp_terminal::Terminal> = util::OnceLock::new();
+
+fn k_main(_boot_info: boot::_Info_) -> ! {
+    load_gdt();
+    log_nl("....loaded gdt");
+    load_idt();
+    log_nl("....loaded idt");
+    init_ps2();
+    log_nl("....init ps2 k");
+    GLOBAL_TERMINAL.get_or_init(|| Terminal::new(&_boot_info));
+    GLOBAL_PAGE_FRAME_ALLOCATOR.get_or_init(|| PageFrameAllocator::new(&_boot_info));
+    //GLOBAL_TERMINAL.get_mut().unwrap().write_fmt(format_args!("{}", GLOBAL_PAGE_FRAME_ALLOCATOR.get().unwrap().bitmap));
+    loop {}
+}   
+
 
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> !{
+fn panic(_info: &PanicInfo) -> ! {
     unsafe {
-        loop{
-            core::arch::asm!("hlt")
+        loop {
+            asm!("hlt");
         }
     }
 }

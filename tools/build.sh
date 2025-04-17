@@ -9,5 +9,7 @@ cp target/x86_64-unknown-uefi/release/bootx64.efi bin/efi/boot
 cp target/x86_64-unknown-none/release/kernelx64 bin/
 
 cp res/assets/fonts/kernel_terminal_font.psf bin/fonts/default.psf
-cp res/assets/config.toml bin/
+if ! test -f bin/config.toml; then
+    cp res/assets/config.toml bin/
+fi
 cp res/assets/themes/default.toml bin/themes

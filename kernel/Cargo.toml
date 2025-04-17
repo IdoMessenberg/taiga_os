@@ -1,6 +1,6 @@
 [package]
 name = "kernel"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
 
 [[bin]]
@@ -9,13 +9,19 @@ name = "kernelx64"
 test = false
 bench = false
 
+[lib]
+name = "util"
+path = "src/lib.rs"
+test = false
+bench = false
+
+
 [profile.release]
 strip = true
-#opt-level = "z"
+#opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
-
 
 [dependencies]
 bootloader = {path = "../bootloader", features = ["lib"], default-features = false}

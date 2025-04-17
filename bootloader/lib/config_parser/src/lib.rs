@@ -15,7 +15,6 @@ pub struct Info<'a>{
 #[derive(Clone)]
 pub struct KernelConfig<'a>{
     pub path: &'a str,
-    pub verbose_boot_mode: bool,
 }
 
 #[repr(C)]
@@ -64,7 +63,6 @@ pub fn read_config_file<'a>(file: &'a [u8]) -> Result<Info<'a>, &'a str> {
     let mut config_info: Info = Info {
         kernel: KernelConfig {
             path: "", 
-            verbose_boot_mode: false 
         },
         graphics: GraphicsConfig { 
             dark_mode: true, 
@@ -130,7 +128,7 @@ pub fn read_theme_file(file: &[u8]) -> Result<ColourTheme, &str>{
 }
 
 fn parse_kernel_table<'a>(items: Vec<(&'a str, TomlValue<'a>)>) -> Option<KernelConfig<'a>> {
-    let mut res:KernelConfig = KernelConfig { path: "", verbose_boot_mode: false };  
+    let mut res:KernelConfig = KernelConfig { path: ""};  
     for item in items {
         match item.0 {
             "path" => {
@@ -287,43 +285,43 @@ fn parse_theme_table<'a>(items: Vec<(&'a str, TomlValue)>) -> Option<ColourTheme
                     None => return None
                 } 
             }
-            "dark_gray" => {
+            "dark-gray" => {
                 res.dark_gray = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_red" => {
+            "light-red" => {
                 res.light_red = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_green" => {
+            "light-green" => {
                 res.light_green = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_blue" => {
+            "light-blue" => {
                 res.light_blue = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_yellow" => {
+            "light-yellow" => {
                 res.light_yellow = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_orange" => {
+            "light-orange" => {
                 res.light_orange = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None
                 } 
             }
-            "light_purple" => {
+            "light-purple" => {
                 res.light_purple = match item.1.as_integer(){
                     Some(v) => v as u32,
                     None => return None

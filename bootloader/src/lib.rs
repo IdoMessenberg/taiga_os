@@ -3,8 +3,7 @@
 pub extern crate uefi as efi;
 pub extern crate psf_loader as psf;
 #[repr(C)]
-#[derive(Debug)]
-pub struct _BootInfo_ {
+pub struct _Info_ {
     pub memory_map: efi::data_types::MemoryMapInfo,
     pub font: psf::FontInfo,
     pub theme: TerminalTheme,
@@ -13,7 +12,7 @@ pub struct _BootInfo_ {
 
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct GraphicsInfo{
     pub framebuffer_base_address:  u64,
     pub framebuffer_size:          usize,
@@ -34,7 +33,7 @@ impl GraphicsInfo {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct TerminalTheme{
     pub dark_mode   : bool,
     pub black       : u32,

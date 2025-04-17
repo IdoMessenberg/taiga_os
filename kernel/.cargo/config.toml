@@ -6,7 +6,7 @@ target-dir="../target"
 rustflags = [
     "-C", "relocation-model=static",
     "-C", "link-args=-no-pie",
-    "-C", "link-args=-T x64_linker.ld",
+    "-C", "link-args=-T linkers/x64.ld",
 ]
 
 [unstable]

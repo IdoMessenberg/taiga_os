@@ -18,7 +18,7 @@ name = "boot"
 path = "src/lib.rs"
 
 [profile.release]
-strip="debuginfo"
+strip = true
 opt-level = "z"
 lto = true
 codegen-units = 1

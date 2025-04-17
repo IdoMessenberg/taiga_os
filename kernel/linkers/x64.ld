@@ -3,8 +3,8 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x1000;	
-	__k_start_addr = .;
+	. = 1M;	
+	__k_start_addr__ = .;
 
     .text : ALIGN(0x1000)
 	{
@@ -24,5 +24,5 @@ SECTIONS
 		*(.bss)
 	}
 		
-	__k_end_addr = .;
+	__k_end_addr__ = .;
 }

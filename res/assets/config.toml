@@ -5,4 +5,4 @@ path = "kernelx64"
 mode = "dark"
 theme = "default" # <- need to be a toml file in the theme folder
 font = "default" # <- needs to be a psf font, in the fonts folder
-resolution = "default" # <- default, hd , 2k, (todo: add 4k) 
+resolution = "default" # <- default, hd , 2k, (todo: add 4k) or custom [width, hight] (some resolutions may not work or cause errors even if they are available

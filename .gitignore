@@ -9,3 +9,5 @@ bin/
 # workspace ignore
 .vscode/
 ovmf/
+
+kernel_old
