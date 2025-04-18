@@ -1,5 +1,5 @@
 
-pub mod paging;
+//pub mod paging;
 pub mod gdt;
 pub mod idt;
 pub mod io_bus;

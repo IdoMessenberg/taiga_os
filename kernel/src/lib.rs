@@ -6,6 +6,10 @@ pub struct OnceLock<T>{
     pub once: AtomicBool,
     pub value: UnsafeCell<MaybeUninit<T>>
 }
+pub enum OnceLocStatus {
+    Success,
+    InitErr
+}
 impl<T> OnceLock<T> {
     pub const fn new() -> Self {
         Self {
@@ -15,25 +19,21 @@ impl<T> OnceLock<T> {
     }
     
     fn is_initialized(&self) -> bool {
-        self.once.load(core::sync::atomic::Ordering::Relaxed)
+        self.once.load(core::sync::atomic::Ordering::SeqCst)
     }
 
-    fn initialize<F, E>(&self, f: F) -> Result<(), E>
+    fn initialize<F>(&self, f: F) -> OnceLocStatus
     where
-        F: FnOnce() -> Result<T, E>
+        F: FnOnce() -> T
     {
-        match f() {
-            Ok(val) => {
-                unsafe{
-                    self.value.get().as_mut().unwrap().write(val);
-                    self.once.store(true, core::sync::atomic::Ordering::Release);
-                }
-            },
-            Err(e) => {
-                return Err(e);
+        unsafe{
+            match self.value.get().as_mut(){
+                Some(v) => {v.write(f());},
+                None => return OnceLocStatus::InitErr
             }
+            self.once.store(true, core::sync::atomic::Ordering::SeqCst);
         }
-        Ok(())
+        OnceLocStatus::Success
     }
 
     pub unsafe fn get_value_unchecked(&self) -> &T {
@@ -59,33 +59,23 @@ impl<T> OnceLock<T> {
     }
 
 
-    pub fn get_or_try_init<F, E> (&self, f: F) -> Result<&T, E>
-    where
-        F: FnOnce() -> Result<T, E>
-    {
-        match self.get() {
-            Some(val) => {return Ok(val)},
-            None => {self.initialize(f)?;},
-        }
-        Ok(unsafe{self.get_value_unchecked()})
-    }
-
-    pub fn get_or_init<F> (&self, f: F) -> &T
+    pub fn get_or_init<F, E> (&self, f: F) -> &T
     where
         F: FnOnce() -> T
     {
-        match self.get_or_try_init(|| Ok::<T, ()>(f())) {
-            Ok(val) => val,
-            Err(_handler) => unreachable!(),
+        match self.get() {
+            Some(val) => {return val},
+            None => {self.initialize(f);},
         }
+        unsafe{self.get_value_unchecked()}
     }
 
-    pub fn init<F, E> (&self, f: F, error_code: E) -> Result<(), E>
+    pub fn init<F> (&self, f: F) -> OnceLocStatus
     where
-        F: FnOnce() -> Result<T,E>,
+        F: FnOnce() -> T,
     {
         match self.is_initialized() {
-            true => Err(error_code),
+            true => OnceLocStatus::InitErr,
             false => self.initialize(f)
         }
     }

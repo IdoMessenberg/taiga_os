@@ -1,11 +1,8 @@
 
 use core::fmt::Write;
-
-trait FrameBufferTrait {
-    unsafe fn put_pixel(&self, pos_x: u32, pos_y: u32, colour: u32);
-}
+use crate::temp_graphics::FrameBufferTrait;
 pub struct Terminal{
-    frame_buffer:boot::GraphicsInfo,
+    pub frame_buffer:boot::GraphicsInfo,
     font: boot::psf::FontInfo,
     theme: boot::TerminalTheme,
     curs_pos_x: u16,
@@ -34,6 +31,18 @@ impl Terminal {
         if self.curs_pos_x as u32 + 1 >= (self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) - 1{
             self.curs_pos_x = 0;
             self.curs_pos_y += 1;
+            if self.curs_pos_y as u32 >=  (self.frame_buffer.vertical_resolution/ self.font.char_size as u32) - 1 {
+                for y in 0..(self.frame_buffer.vertical_resolution - self.font.char_size as u32) {
+                    for x in 0..self.frame_buffer.horizontal_resolution {
+                        unsafe {
+                            let colour = *((self.frame_buffer.framebuffer_base_address + 4 * self.frame_buffer.pixels_per_scan_line as u64 * (y + self.font.char_size as u32) as u64 + 4 * x as u64) as *mut u32);
+                            core::ptr::write_volatile((self.frame_buffer.framebuffer_base_address + 4 * self.frame_buffer.pixels_per_scan_line as u64 * y as u64 + 4 * x as u64) as *mut u32, colour);                  
+                        }
+                    }
+                }
+                self.curs_pos_y -= 1;
+
+            }
         }
         else {
             self.curs_pos_x += 1;
@@ -50,18 +59,12 @@ impl Terminal {
             }
         }
     }
-}
 
-impl FrameBufferTrait for boot::GraphicsInfo {
-    unsafe fn put_pixel(&self, pos_x: u32, pos_y: u32, colour: u32) {
-        if pos_x > self.horizontal_resolution || pos_y > self.vertical_resolution{
-            return;
-        }
-        unsafe {
-            core::ptr::write_volatile((self.framebuffer_base_address + 4 * self.pixels_per_scan_line as u64 * pos_y as u64 + pos_x as u64 * 4) as *mut u32, colour);
-        }
+    pub fn clear_screen(&self) {
+        self.frame_buffer.clear_screen(self.theme.black);
     }
 }
+
 impl Write for Terminal {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.put_string(s);

@@ -10,4 +10,4 @@ bin/
 .vscode/
 ovmf/
 
-kernel_old
+/kernel/src/arch/x64/paging

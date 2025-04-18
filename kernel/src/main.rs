@@ -5,9 +5,10 @@ mod arch;
 mod drivers;
 mod mem;
 mod log;
+mod temp_graphics;
 mod temp_terminal;
 
-use core::{arch::asm, panic::PanicInfo};
+use core::{arch::asm, panic::PanicInfo, ptr::{write_bytes, NonNull}};
 use arch::{load_gdt, load_idt};
 use drivers::ps2::keyboard::init_ps2;
 use log::log_nl;
@@ -39,9 +40,12 @@ fn k_main(_boot_info: boot::_Info_) -> ! {
     log_nl("....loaded idt");
     init_ps2();
     log_nl("....init ps2 k");
-    GLOBAL_TERMINAL.get_or_init(|| Terminal::new(&_boot_info));
-    GLOBAL_PAGE_FRAME_ALLOCATOR.get_or_init(|| PageFrameAllocator::new(&_boot_info));
-    //GLOBAL_TERMINAL.get_mut().unwrap().write_fmt(format_args!("{}", GLOBAL_PAGE_FRAME_ALLOCATOR.get().unwrap().bitmap));
+    GLOBAL_PAGE_FRAME_ALLOCATOR.init(|| PageFrameAllocator::new(&_boot_info));
+    GLOBAL_TERMINAL.init(|| Terminal::new(&_boot_info));
+    GLOBAL_TERMINAL.get().unwrap().clear_screen();
+
+
+    GLOBAL_TERMINAL.get_mut().unwrap().put_string("in virtual mem");
     loop {}
 }   
 

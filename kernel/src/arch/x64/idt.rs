@@ -1,6 +1,6 @@
 
 use core::arch::asm;
-use util::OnceLock;
+use util::{OnceLocStatus, OnceLock};
 use crate::drivers::ps2::keyboard::keyboard_interrupt_handler;
 
 const IDT_TA_INTERRUPT_GATE:u8 = 0b10001110;
@@ -63,8 +63,8 @@ impl GateDescriptor {
 static IDT: OnceLock<[GateDescriptor; 256]> = OnceLock::new();
 
 pub fn load_idt() {
-    match IDT.init(|| Ok(init_idt()), 0) {
-        Ok(_) => {
+    match IDT.init(|| init_idt()) {
+        OnceLocStatus::Success => {
             let idt_desc: IdtDescriptor = IdtDescriptor::new(unsafe {IDT.get_value_unchecked().as_ptr()});
             unsafe {
                 asm!(
@@ -73,7 +73,7 @@ pub fn load_idt() {
                 )
             }
         },
-        Err(_) => return
+        OnceLocStatus::InitErr => return
     }
 }
 
