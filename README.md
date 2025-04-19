@@ -29,8 +29,8 @@ simple self contained operating system written from scratch in rust
     * [x] page frame allocator
     * [x] idt, gdt
     * [x] terminal output
-    * [ ] terminal input
-    * [x] paging
-    * [ ] heap allocation
+    * [x] terminal input
+    * [ ] paging
+    * [x] heap allocation
     * [ ] file system
 
