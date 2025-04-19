@@ -32,7 +32,7 @@ pub fn init_ps2(){
 
 static LEFT_SHIT: AtomicBool = AtomicBool::new(false);
 static RIGHT_SHIT: AtomicBool = AtomicBool::new(false);
-//static mut CAPS: bool = false;
+static CAPS: AtomicBool = AtomicBool::new(false);
 
 
 pub extern "x86-interrupt" fn keyboard_interrupt_handler(){
@@ -51,12 +51,13 @@ pub extern "x86-interrupt" fn keyboard_interrupt_handler(){
 
         0x4D => GLOBAL_TERMINAL.get_mut().unwrap().fix_curs_pos(1),//right arrow
         0x4B => GLOBAL_TERMINAL.get_mut().unwrap().fix_curs_pos(-1),//left arrow
-
+        58 => CAPS.store(!CAPS.load(Ordering::SeqCst), Ordering::SeqCst),
         0xE0 => (),
         _ => {
             let right_shift: bool = RIGHT_SHIT.load(Ordering::SeqCst);
             let left_shift: bool = LEFT_SHIT.load(Ordering::SeqCst);
-            let is_upper_case: bool = left_shift | right_shift;
+            let caps: bool = CAPS.load(Ordering::SeqCst);
+            let is_upper_case: bool = (caps && !(right_shift | left_shift)) | ((right_shift | left_shift) & !caps);
             let key = parse_key_input(scan_code, is_upper_case);
             if  key != '\0' {
                 GLOBAL_TERMINAL.get_mut().unwrap().put_char(key);
@@ -66,7 +67,7 @@ pub extern "x86-interrupt" fn keyboard_interrupt_handler(){
 }
 
 fn parse_key_input(scan_code: u8, is_upper_case: bool) -> char {
-    if scan_code > 58{
+    if scan_code >= 58{
         return '\0';
     }
     let scan_code_char: char = QWERTY_SCAN_CODE_TABLE[scan_code as usize];
