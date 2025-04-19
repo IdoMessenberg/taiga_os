@@ -1,3 +1,4 @@
+
 use core::{ops::Index, ptr::write_bytes};
 
 pub struct Bitmap{

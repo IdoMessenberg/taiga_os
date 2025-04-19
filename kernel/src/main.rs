@@ -1,6 +1,8 @@
 #![no_std]#![no_main]
 #![feature(abi_x86_interrupt)]
 
+extern crate alloc as std_alloc;
+
 mod arch;
 mod drivers;
 mod mem;
@@ -8,11 +10,11 @@ mod log;
 mod temp_graphics;
 mod temp_terminal;
 
-use core::{arch::asm, panic::PanicInfo, ptr::{write_bytes, NonNull}};
+use core::{arch::asm, fmt::Write, panic::PanicInfo};
 use arch::{load_gdt, load_idt};
 use drivers::ps2::keyboard::init_ps2;
 use log::log_nl;
-use mem::page_frame_alloc::alloc::PageFrameAllocator;
+use mem::page_frame_alloc::alloc::{GlobalPageAlloc, PageFrameAllocator};
 use temp_terminal::Terminal;
 
 unsafe extern "C" {
@@ -30,7 +32,8 @@ extern "efiapi" fn _start(boot_info: boot::_Info_) -> ! {
     k_main(boot_info)
 }
 
-static GLOBAL_PAGE_FRAME_ALLOCATOR: util::OnceLock<PageFrameAllocator> = util::OnceLock::new();
+#[global_allocator]
+static GLOBAL_PAGE_FRAME_ALLOCATOR: GlobalPageAlloc = GlobalPageAlloc(util::OnceLock::new());
 static GLOBAL_TERMINAL: util::OnceLock<temp_terminal::Terminal> = util::OnceLock::new();
 
 fn k_main(_boot_info: boot::_Info_) -> ! {
@@ -40,22 +43,22 @@ fn k_main(_boot_info: boot::_Info_) -> ! {
     log_nl("....loaded idt");
     init_ps2();
     log_nl("....init ps2 k");
-    GLOBAL_PAGE_FRAME_ALLOCATOR.init(|| PageFrameAllocator::new(&_boot_info));
+    GLOBAL_PAGE_FRAME_ALLOCATOR.0.init(|| PageFrameAllocator::new(&_boot_info));
     GLOBAL_TERMINAL.init(|| Terminal::new(&_boot_info));
     GLOBAL_TERMINAL.get().unwrap().clear_screen();
-
-
-    GLOBAL_TERMINAL.get_mut().unwrap().put_string("in virtual mem");
-    loop {}
-}   
-
-
+    hlt_loop()
+}
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    let _ = GLOBAL_TERMINAL.get_mut().unwrap().write_fmt(format_args!("Panic!: {}", info.message()));
+    hlt_loop()
+}
+
+fn hlt_loop() -> ! {
     unsafe {
         loop {
             asm!("hlt");
         }
-    }
+    }  
 }

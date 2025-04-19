@@ -1,7 +1,6 @@
 
 use core::{arch::asm, ptr::addr_of};
 
-
 #[repr(C, packed)]
 struct GdtDescriptor {
     size: u16,

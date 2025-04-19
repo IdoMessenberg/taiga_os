@@ -1,6 +1,7 @@
 
 use core::fmt::Write;
 use crate::temp_graphics::FrameBufferTrait;
+
 pub struct Terminal{
     pub frame_buffer:boot::GraphicsInfo,
     font: boot::psf::FontInfo,
@@ -28,10 +29,82 @@ impl Terminal {
                 }
             }
         }
-        if self.curs_pos_x as u32 + 1 >= (self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) - 1{
-            self.curs_pos_x = 0;
-            self.curs_pos_y += 1;
-            if self.curs_pos_y as u32 >=  (self.frame_buffer.vertical_resolution/ self.font.char_size as u32) - 1 {
+        self.fix_curs_pos(1);
+    }
+
+    pub fn put_string(&mut self, string: &str){
+        for char in string.chars() {
+            match char {
+                '\0' => return,
+                '\r' => { 
+                    self.fix_curs_pos(-(self.curs_pos_x as i16));
+                },
+                '\t' => {
+                    self.fix_curs_pos(4);
+                }
+                '\n' => { 
+                    self.curs_pos_y += 1;
+                    self.fix_curs_pos(0);
+                },
+                _ => self.put_char(char)
+            }
+        }
+    }
+
+    pub fn clear_char(&mut self) {
+        for y in (self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER..(self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER + 2 {
+            for x in self.curs_pos_x * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER..(self.curs_pos_x + 1) * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER {
+                unsafe {
+                    self.frame_buffer.put_pixel(x as u32, y as u32, self.theme.black);
+                }
+            }
+        }
+        if self.curs_pos_x != 0 {
+            self.curs_pos_x -= 1;
+        }
+        else if self.curs_pos_y != 0  {
+            self.curs_pos_y -= 1;
+            self.curs_pos_x = (self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) as u16 - 2;
+        }
+        else {
+            return
+        }
+        for y in self.curs_pos_y * self.font.char_size as u16 + Self::TOP_BUFFER..(self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER {
+            for x in self.curs_pos_x * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER..(self.curs_pos_x + 1) * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER {
+                unsafe {
+                    self.frame_buffer.put_pixel(x as u32, y as u32, self.theme.black);
+
+                }
+            }
+        }
+        for y in (self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER..(self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER + 2 {
+            for x in self.curs_pos_x * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER..(self.curs_pos_x + 1) * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER {
+                unsafe {
+                    self.frame_buffer.put_pixel(x as u32, y as u32, self.theme.white);
+                }
+            }
+        }
+    }
+    pub fn fix_curs_pos(&mut self, x_offset: i16){
+        for y in (self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER..(self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER + 2 {
+            for x in self.curs_pos_x * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER..(self.curs_pos_x + 1) * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER {
+                unsafe {
+                    self.frame_buffer.put_pixel(x as u32, y as u32, self.theme.black);
+                }
+            }
+        }
+
+        
+        if self.curs_pos_x as i16 + x_offset >= 0 && self.curs_pos_x as i16 + x_offset < (self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) as i16 - 1 {
+            self.curs_pos_x = (self.curs_pos_x as i16 + x_offset) as u16;
+        }
+        else if self.curs_pos_x as i16 + x_offset < 0 && self.curs_pos_y != 0 {
+            self.curs_pos_x = ((self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) as i16 - 1 + self.curs_pos_x as i16 + x_offset) as u16;
+            self.curs_pos_y -= 1;
+        }
+        else if self.curs_pos_x as i16 + x_offset >= (self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) as i16 - 1 {
+            self.curs_pos_x = (self.curs_pos_x as i16 + x_offset - ((self.frame_buffer.horizontal_resolution/boot::psf::FontInfo::CHAR_WIDTH as u32) as i16 - 1)) as u16;
+            if self.curs_pos_y as u32 + 1 >=  (self.frame_buffer.vertical_resolution/ self.font.char_size as u32) - 1 {
                 for y in 0..(self.frame_buffer.vertical_resolution - self.font.char_size as u32) {
                     for x in 0..self.frame_buffer.horizontal_resolution {
                         unsafe {
@@ -40,22 +113,17 @@ impl Terminal {
                         }
                     }
                 }
-                self.curs_pos_y -= 1;
-
+            }
+            else {
+                self.curs_pos_y += 1;
             }
         }
-        else {
-            self.curs_pos_x += 1;
-        }
-    }
 
-    pub fn put_string(&mut self, string: &str){
-        for char in string.chars() {
-            match char {
-                '\0' => return,
-                '\r' => { self.curs_pos_x = 0 },
-                '\n' => { self.curs_pos_y += 1},
-                _ => self.put_char(char)
+        for y in (self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER..(self.curs_pos_y + 1) * self.font.char_size as u16 + Self::TOP_BUFFER + 2 {
+            for x in self.curs_pos_x * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER..(self.curs_pos_x + 1) * boot::psf::FontInfo::CHAR_WIDTH as u16 + Self::SIDE_BUFFER {
+                unsafe {
+                    self.frame_buffer.put_pixel(x as u32, y as u32, self.theme.white);
+                }
             }
         }
     }

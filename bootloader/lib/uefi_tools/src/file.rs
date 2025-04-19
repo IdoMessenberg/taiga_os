@@ -61,6 +61,7 @@ impl FileFunctions for file::Protocol {
         self.close_file(file_handle);
         Ok(data)
     }
+    
     fn open_file(&self, file_path: *const u16) -> Result<&file::Protocol, Status> {
         let file_handle: *const file::Protocol = null();
         match (self.open)(self, addr_of!(file_handle), file_path, file::READ_MODE, file::READ_ONLY | file::HIDDEN | file::SYSTEM){
@@ -87,5 +88,7 @@ impl FileFunctions for file::Protocol {
         }
     }
 
-    fn close_file(&self, file_handle: &file::Protocol) -> Status { (self.close)(file_handle) }
+    fn close_file(&self, file_handle: &file::Protocol) -> Status {
+        (self.close)(file_handle) 
+    }
 }

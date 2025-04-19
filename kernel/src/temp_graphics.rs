@@ -2,9 +2,6 @@
 use core::ptr::write_volatile;
 use boot::GraphicsInfo;
 
-
-
-
 pub trait FrameBufferTrait {
     unsafe fn put_pixel(&self, pos_x: u32, pos_y: u32, colour: u32);
     fn clear_screen(&self, colour: u32);

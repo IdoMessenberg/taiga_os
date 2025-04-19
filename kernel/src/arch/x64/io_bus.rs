@@ -20,7 +20,8 @@ pub fn inb(port: u16) -> u8 {
         asm!(
             "in al, dx",
             in("dx") port,
-            out("al") ret
+            out("al") ret,
+            options(preserves_flags, nomem, nostack)
         )
     }
     ret

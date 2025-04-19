@@ -1,5 +1,7 @@
 
-use crate::{__k_start_addr__, __k_end_addr__, mem::page_frame_alloc::bitmap::Bitmap};
+use core::{alloc::GlobalAlloc, ptr::null_mut};
+
+use crate::{__k_end_addr__, __k_start_addr__, mem::page_frame_alloc::bitmap::Bitmap, GLOBAL_PAGE_FRAME_ALLOCATOR};
 use boot::efi::data_types::{MemoryDescriptor, MemoryType};
 
 pub struct PageFrameAllocator {
@@ -12,7 +14,7 @@ pub struct PageFrameAllocator {
 pub enum PageFameAllocStatus {
     Success,
     AllocErr,
-    //DeAllocErr,
+    DeAllocErr,
     ReserveErr,
     UnREserveErr,
 }
@@ -88,7 +90,7 @@ impl PageFrameAllocator {
         self.bitmap.set(addr/Self::PAGE_SIZE, true);
         PageFameAllocStatus::Success
     }
-    /*fn dealloc_page(&mut self, addr: usize) -> PageFameAllocStatus {
+    fn dealloc_page(&mut self, addr: usize) -> PageFameAllocStatus {
         match self.bitmap[addr/Self::PAGE_SIZE] {
             None | Some(false) => {return PageFameAllocStatus::DeAllocErr;},
             Some(_) => ()
@@ -97,7 +99,7 @@ impl PageFrameAllocator {
         self.used_pages -= 1;
         self.bitmap.set(addr/Self::PAGE_SIZE, false);
         PageFameAllocStatus::Success
-    }*/
+    }
 
     fn reserve_page(&mut self, addr: usize) -> PageFameAllocStatus {
         match self.bitmap[addr/Self::PAGE_SIZE] {
@@ -118,5 +120,25 @@ impl PageFrameAllocator {
         self.reserved_pages -= 1;
         self.bitmap.set(addr/Self::PAGE_SIZE, false);
         PageFameAllocStatus::Success
+    }
+}
+
+pub struct GlobalPageAlloc(pub util::OnceLock<PageFrameAllocator>);
+
+unsafe impl GlobalAlloc for GlobalPageAlloc {
+    unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
+        if layout.size() <= 4096 {
+            match GLOBAL_PAGE_FRAME_ALLOCATOR.0.get_mut().unwrap().get_free_page() {
+                Some(v) => {
+                    return v as *mut u8
+                }
+                None => ()
+            }
+        }
+        
+        null_mut()
+    }
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: core::alloc::Layout) {
+        GLOBAL_PAGE_FRAME_ALLOCATOR.0.get_mut().unwrap().dealloc_page(ptr as usize);
     }
 }
