@@ -66,7 +66,7 @@ pub enum AllocateType {
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=242
 ///https://uefi.org/sites/default/files/resources/UEFI_Spec_2_9_2021_03_18.pdf#page=239
 #[repr(u32)]
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq)]
 pub enum MemoryType {
     ReservedMemoryType,
     LoaderCode,
