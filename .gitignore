@@ -5,3 +5,5 @@ Cargo.lock
 # proj ignore
 logs.log
 bin/
+
+.vscode/

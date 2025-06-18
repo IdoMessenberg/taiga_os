@@ -91,13 +91,13 @@ fn init_idt() -> [GateDescriptor; 256] {
 struct InterruptFame{}
 
 extern "x86-interrupt" fn double_fault_handler(_fame: *const InterruptFame) -> ! {
-    todo!()
+    todo!("double fault")
 }
 
 extern "x86-interrupt" fn general_protection_fault_handler(_fame: *const InterruptFame) -> ! {
-    todo!()
+    todo!("gp fault")
 }
 
 extern "x86-interrupt" fn page_fault_handler(_fame: *const InterruptFame) -> ! {
-    todo!()
+    todo!("page fault")
 }
