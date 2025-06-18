@@ -10,8 +10,8 @@ mod log;
 mod temp_graphics;
 mod temp_terminal;
 
-use core::{arch::asm, fmt::Write, panic::PanicInfo};
-use arch::{load_gdt, load_idt};
+use core::{arch::asm, fmt::Write, panic::PanicInfo, ptr::addr_of};
+use arch::{load_gdt, load_idt, paging};
 use drivers::ps2::keyboard::init_ps2;
 use log::log_nl;
 use mem::page_frame_alloc::alloc::{GlobalPageAlloc, PageFrameAllocator};
@@ -36,16 +36,37 @@ extern "efiapi" fn _start(boot_info: boot::_Info_) -> ! {
 static GLOBAL_PAGE_FRAME_ALLOCATOR: GlobalPageAlloc = GlobalPageAlloc(util::OnceLock::new());
 static GLOBAL_TERMINAL: util::OnceLock<temp_terminal::Terminal> = util::OnceLock::new();
 
-fn k_main(_boot_info: boot::_Info_) -> ! {
+fn k_main(boot_info: boot::_Info_) -> ! {
     load_gdt();
     log_nl("....loaded gdt");
     load_idt();
     log_nl("....loaded idt");
     init_ps2();
     log_nl("....init ps2 k");
-    GLOBAL_PAGE_FRAME_ALLOCATOR.0.init(|| PageFrameAllocator::new(&_boot_info));
-    GLOBAL_TERMINAL.init(|| Terminal::new(&_boot_info));
+    GLOBAL_PAGE_FRAME_ALLOCATOR.0.init(|| PageFrameAllocator::new(&boot_info));
+    GLOBAL_TERMINAL.init(|| Terminal::new(&boot_info));
     GLOBAL_TERMINAL.get().unwrap().clear_screen();
+    GLOBAL_TERMINAL.get_mut().unwrap().put_string("HEY!\r\n");
+
+
+
+    GLOBAL_TERMINAL.get_mut().unwrap().put_string("HELO!\r\n");
+    let mut ptm: paging::PageTableManager = paging::PageTableManager::new();
+    for page in 0..boot_info.memory_map.get_pages() as u64 {
+        ptm.map_page(page * 4096, page * 4096);
+    }
+
+    for page in (boot_info.graphics.framebuffer_base_address..boot_info.graphics.framebuffer_base_address + boot_info.graphics.framebuffer_size as u64).step_by(0x1000) {
+        ptm.map_page(page, page);
+    }
+
+    unsafe {
+        asm!(
+            "mov cr3, {0}",
+            in(reg) addr_of!(ptm.pml4) as u64
+        )
+    }
+
     hlt_loop()
 }
 
