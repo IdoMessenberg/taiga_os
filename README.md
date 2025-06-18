@@ -30,7 +30,7 @@ simple self contained operating system written from scratch in rust
     * [x] idt, gdt
     * [x] terminal output
     * [x] terminal input
-    * [ ] paging
-    * [x] heap allocation
+    * [x] paging
+    * [ ] heap allocation
     * [ ] file system
 

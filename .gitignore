@@ -6,8 +6,5 @@ Cargo.lock
 logs.log
 bin/
 
-# workspace ignore
 .vscode/
 ovmf/
-
-/kernel/src/arch/x64/paging
